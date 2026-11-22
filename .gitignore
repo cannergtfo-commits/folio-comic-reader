@@ -1,0 +1,22 @@
+# Secrets and local machine config — never commit these
+keystore/
+*.jks
+*.keystore
+keystore.properties
+local.properties
+
+# Build outputs (the signed APK is attached to GitHub Releases, not git)
+build/
+.gradle/
+**/build/
+*.apk
+*.aab
+*.ap_
+captures/
+.cxx/
+
+# IDE / OS
+.idea/
+*.iml
+.DS_Store
+*~
