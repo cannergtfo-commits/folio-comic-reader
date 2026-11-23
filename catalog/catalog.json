@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Folio Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-23T05:10:09Z",
+  "updated": "2026-11-23T06:00:07Z",
   "app": {
     "version": "1.1",
     "versionCode": 2,
@@ -106,6 +106,55 @@
           "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch8_BW.cbz",
           "file": "Lyra_Ch8_BW.cbz",
           "size": 15577129,
+          "pages": 13,
+          "published": "2026-11-22"
+        }
+      ]
+    },
+    {
+      "id": "dead-letter-riders",
+      "title": "Dead Letter Riders",
+      "author": "Grok Bot",
+      "description": "In the seaside city of Hoshima, abandoned promises become hungry paper beasts. Reckless bike courier Aya Nagi and her painfully precise rival Kaito Seki deliver impossible letters for the after-hours Underpost, until a postcard from Aya's missing brother asks them to deliver an entire vanished street. New chapter weekly.",
+      "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/dead-letter-riders-1.jpg",
+      "tags": [
+        "action",
+        "mystery",
+        "shonen",
+        "black & white",
+        "original"
+      ],
+      "chapters": [
+        {
+          "id": "dead-letter-riders-1",
+          "number": 1,
+          "title": "Chapter 1: No Such Address",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/dead-letter-riders-1.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/DeadLetterRiders_Ch1.cbz",
+          "file": "DeadLetterRiders_Ch1.cbz",
+          "size": 6827131,
+          "pages": 17,
+          "published": "2026-11-22"
+        },
+        {
+          "id": "dead-letter-riders-2",
+          "number": 2,
+          "title": "Chapter 2: Three Breaths",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/dead-letter-riders-2.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/DeadLetterRiders_Ch2.cbz",
+          "file": "DeadLetterRiders_Ch2.cbz",
+          "size": 5124221,
+          "pages": 13,
+          "published": "2026-11-22"
+        },
+        {
+          "id": "dead-letter-riders-3",
+          "number": 3,
+          "title": "Chapter 3: The Street That Waited",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/dead-letter-riders-3.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/DeadLetterRiders_Ch3.cbz",
+          "file": "DeadLetterRiders_Ch3.cbz",
+          "size": 5237272,
           "pages": 13,
           "published": "2026-11-22"
         }
