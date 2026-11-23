@@ -73,8 +73,8 @@ import java.io.File
 class ScreenshotTest {
     @get:Rule val compose = createComposeRule()
 
-    private val books = File("/workspace/comic/exports/books")
-    private val out = File("/workspace/comic-reader-app/screenshots")
+    private val books = File(System.getenv("FOLIO_TESTDATA") ?: "/workspace/folio-testdata/books")
+    private val out = File(System.getenv("FOLIO_SHOTS") ?: "/workspace/comic-reader-app/screenshots")
     private val tmp = File(System.getProperty("java.io.tmpdir"), "folio-shots").apply { mkdirs() }
 
     private fun cover(id: String, bmp: Bitmap): String {
@@ -89,7 +89,7 @@ class ScreenshotTest {
         assumeTrue(books.exists())
         val now = System.currentTimeMillis()
         val lyra = (1..4).map { n ->
-            val f = File(books, "Lyra_Ch$n.cbz")
+            val f = File(books, "Lyra_Ch${n}_BW.cbz")
             CbzArchive(f).use { a ->
                 val bytes = a.readBytes(a.coverIndex)
                 val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)

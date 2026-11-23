@@ -27,15 +27,15 @@ import java.io.File
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class IntegrationTest {
-    private val books = File("/workspace/comic/exports/books")
-    private val out = File("/workspace/comic-reader-app/screenshots")
+    private val books = File(System.getenv("FOLIO_TESTDATA") ?: "/workspace/folio-testdata/books")
+    private val out = File(System.getenv("FOLIO_SHOTS") ?: "/workspace/comic-reader-app/screenshots")
 
     @org.junit.Before fun setUp() {
         net.blazarforce.folio.data.Importer.io = kotlinx.coroutines.Dispatchers.Unconfined
         // Prime Robolectric's native graphics JNI on the test thread.
         android.graphics.Bitmap.createBitmap(4, 4, android.graphics.Bitmap.Config.ARGB_8888)
             .compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, java.io.ByteArrayOutputStream())
-        if (books.exists()) net.blazarforce.folio.comic.CbzArchive(File(books, "Lyra_Ch1.cbz")).use { a ->
+        if (books.exists()) net.blazarforce.folio.comic.CbzArchive(File(books, "Lyra_Ch1_BW.cbz")).use { a ->
             val b = a.readBytes(0)
             val bmp = android.graphics.BitmapFactory.decodeByteArray(b, 0, b.size)
             val small = android.graphics.Bitmap.createScaledBitmap(bmp, 120, 160, true)
@@ -51,19 +51,19 @@ class IntegrationTest {
         assumeTrue(books.exists())
         val app = ApplicationProvider.getApplicationContext<FolioApp>()
         val imported = runBlocking {
-            (1..4).map { n -> app.importer.importDocument(Uri.fromFile(File(books, "Lyra_Ch$n.cbz")))!! }
+            (1..4).map { n -> app.importer.importDocument(Uri.fromFile(File(books, "Lyra_Ch${n}_BW.cbz")))!! }
         }
         imported.forEachIndexed { i, b ->
             assertEquals(BookKind.CBZ, b.kind)
-            assertEquals("Lyra", b.series)
+            assertEquals("Lyra (B&W edition)", b.series)
             assertEquals("${i + 1}", b.number)
-            assertEquals("Lyra — Chapter ${i + 1}", b.title)
+            assertTrue(b.title.startsWith("Chapter ${i + 1}: "))
             assertTrue(File(b.location).length() > 1_000_000)
             assertTrue("cover written", File(b.coverPath!!).length() > 10_000)
         }
         assertEquals(listOf(7, 9, 9, 13), imported.map { it.pageCount })
         // Re-importing the same file is de-duplicated.
-        val again = runBlocking { app.importer.importDocument(Uri.fromFile(File(books, "Lyra_Ch1.cbz"))) }
+        val again = runBlocking { app.importer.importDocument(Uri.fromFile(File(books, "Lyra_Ch1_BW.cbz"))) }
         assertEquals(imported[0].id, again!!.id)
         assertEquals(4, app.store.books.value.size)
 
@@ -88,7 +88,7 @@ class IntegrationTest {
     @Test
     fun viewIntentImportsAndLaunchesReader() {
         assumeTrue(books.exists())
-        val intent = Intent(Intent.ACTION_VIEW, Uri.fromFile(File(books, "Lyra_Ch3.cbz")))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.fromFile(File(books, "Lyra_Ch3_BW.cbz")))
             .setClass(ApplicationProvider.getApplicationContext(), MainActivity::class.java)
         val main = Robolectric.buildActivity(MainActivity::class.java, intent).setup().get()
         var next: Intent? = null
@@ -101,6 +101,6 @@ class IntegrationTest {
         assertEquals(ReaderActivity::class.java.name, next!!.component!!.className)
         val app = ApplicationProvider.getApplicationContext<FolioApp>()
         assertSame(1, app.store.books.value.size)
-        assertEquals("Lyra — Chapter 3", app.store.books.value.first().title)
+        assertEquals("Chapter 3: The Last Purebloods", app.store.books.value.first().title)
     }
 }

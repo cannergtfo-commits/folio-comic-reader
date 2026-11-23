@@ -78,14 +78,14 @@ class ComicParsingTest {
 
     @Test
     fun realLyraChapterOne() {
-        val f = File("/workspace/comic/exports/books/Lyra_Ch1.cbz")
+        val f = File(System.getenv("FOLIO_TESTDATA") ?: "/workspace/folio-testdata/books", "Lyra_Ch1_BW.cbz")
         assumeTrue("sample CBZ not present", f.exists())
         CbzArchive(f).use { a ->
             assertEquals(7, a.pageCount)
             assertEquals((1..7).map { "%03d.png".format(it) }, a.pages.map { it.name })
             val info = assertNotNullAndGet(a.info)
-            assertEquals("Lyra — Chapter 1", info.title)
-            assertEquals("Lyra", info.series)
+            assertEquals("Chapter 1: Alone in the Woods", info.title)
+            assertEquals("Lyra (B&W edition)", info.series)
             assertEquals("1", info.number)
             assertEquals(7, info.pageCount)
             assertEquals(0, info.frontCoverIndex)
@@ -104,12 +104,12 @@ class ComicParsingTest {
     @Test
     fun allLyraChaptersParse() {
         for (n in 1..4) {
-            val f = File("/workspace/comic/exports/books/Lyra_Ch$n.cbz")
+            val f = File(System.getenv("FOLIO_TESTDATA") ?: "/workspace/folio-testdata/books", "Lyra_Ch${n}_BW.cbz")
             assumeTrue(f.exists())
             CbzArchive(f).use { a ->
                 assertEquals(a.info?.pageCount, a.pageCount)
                 assertEquals("$n", a.info?.number)
-                assertEquals("Lyra", a.info?.series)
+                assertEquals("Lyra (B&W edition)", a.info?.series)
             }
         }
     }
