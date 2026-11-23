@@ -4,10 +4,10 @@
   "publisher": "Blazar Force",
   "updated": "2026-11-23T06:00:07Z",
   "app": {
-    "version": "1.2",
-    "versionCode": 3,
-    "apk": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/v1.2/Folio.apk",
-    "notes": "A polished ink-and-gold look, cover-to-reader zoom, Page flip and Depth page turns, and animated downloads."
+    "version": "1.3",
+    "versionCode": 4,
+    "apk": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/v1.3/Folio.apk",
+    "notes": "Discover lists each comic as its own card; tap one for its chapters."
   },
   "series": [
     {
