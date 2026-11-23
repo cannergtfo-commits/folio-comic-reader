@@ -27,6 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -68,7 +70,10 @@ import net.blazarforce.folio.ui.theme.LocalPalette
 import net.blazarforce.folio.ui.theme.PaperPalette
 
 class MainActivity : ComponentActivity() {
-    private val messages = Channel<String>(Channel.BUFFERED)
+    /** A pop-up message; [link] deep-links into Discover (a series id, or "" for the comics list). */
+    private data class Toast(val text: String, val link: String? = null)
+    private val messages = Channel<Toast>(Channel.BUFFERED)
+    private suspend fun say(text: String, link: String? = null) = messages.send(Toast(text, link))
     private var importing by mutableStateOf(false)
     private var hero by mutableStateOf<HeroLaunch?>(null)
 
@@ -95,16 +100,35 @@ class MainActivity : ComponentActivity() {
             val shelfIds = remember(books) { books.map { it.id }.toSet() }
             val newCount = lib.catalog?.chapters.orEmpty().count { it.id !in lib.seen && it.bookId !in shelfIds }
             val update = lib.catalog?.app?.takeIf { it.versionCode > BuildConfig.VERSION_CODE && it.apk.isNotBlank() }
+            var discoverSeries by rememberSaveable { mutableStateOf<String?>(null) }
             var seriesName by rememberSaveable { mutableStateOf<String?>(null) }
             var sheetFor by remember { mutableStateOf<Book?>(null) }
             val snackbar = remember { SnackbarHostState() }
             val scope = rememberCoroutineScope()
             LaunchedEffect(settings.theme) { applyBars(settings.theme) }
-            LaunchedEffect(Unit) { messages.receiveAsFlow().collect { snackbar.showSnackbar(it) } }
+            LaunchedEffect(Unit) {
+                messages.receiveAsFlow().collect { t ->
+                    val r = snackbar.showSnackbar(
+                        t.text, actionLabel = if (t.link != null) "View" else null,
+                        duration = if (t.link != null) SnackbarDuration.Long else SnackbarDuration.Short,
+                    )
+                    if (r == SnackbarResult.ActionPerformed && t.link != null) {
+                        seriesName = null
+                        discover = true
+                        discoverSeries = t.link.ifBlank { null }
+                    }
+                }
+            }
             LaunchedEffect(Unit) {
                 val fresh = app.catalog.refresh().filter { it.bookId !in app.store.books.value.map { b -> b.id } }
                 if (fresh.isNotEmpty() && !discover) {
-                    messages.send(if (fresh.size == 1) "New in Discover: ${fresh.first().seriesTitle}, chapter ${fresh.first().numberLabel}" else "${fresh.size} new chapters in Discover")
+                    val seriesIds = fresh.map { it.seriesId }.distinct()
+                    say(
+                        if (fresh.size == 1) "New in Discover: ${fresh.first().seriesTitle}, chapter ${fresh.first().numberLabel}"
+                        else if (seriesIds.size == 1) "${fresh.size} new chapters of ${fresh.first().seriesTitle}"
+                        else "${fresh.size} new chapters in Discover",
+                        link = seriesIds.singleOrNull() ?: "",
+                    )
                 }
             }
 
@@ -124,6 +148,7 @@ class MainActivity : ComponentActivity() {
                 }
                 BackHandler(series != null) { seriesName = null }
                 BackHandler(series == null && discover) { discover = false }
+                BackHandler(series == null && discover && discoverSeries != null) { discoverSeries = null }
                 Box(Modifier.fillMaxSize().background(p.canvas)) {
                     AnimatedContent(
                         targetState = discover && series == null,
@@ -141,6 +166,8 @@ class MainActivity : ComponentActivity() {
                             onGetAll = { s -> scope.launch { getChapters(s.chapters.filter { it.bookId !in shelfIds }) } },
                             onRead = { ch -> app.catalog.bookFor(ch)?.let { openReader(it) } },
                             onUpdate = { a -> runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(a.apk))) } },
+                            openSeries = discoverSeries,
+                            onOpenSeries = { discoverSeries = it },
                         )
                     } else {
                     AnimatedContent(
@@ -171,15 +198,16 @@ class MainActivity : ComponentActivity() {
                     }
                     }
                     }
-                    if (series == null) {
+                    val inDiscoverSeries = discover && discoverSeries != null
+                    if (series == null && !inDiscoverSeries) {
                         TabSwitch(
                             discover = discover, newCount = newCount,
-                            onShelf = { discover = false }, onDiscover = { discover = true },
+                            onShelf = { discover = false; discoverSeries = null }, onDiscover = { discover = true },
                             modifier = Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 14.dp),
                         )
                     }
-                    SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = if (series == null) 76.dp else 16.dp)) { data ->
-                        FolioToast(data.visuals.message)
+                    SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = if (series == null && !inDiscoverSeries) 76.dp else 16.dp)) { data ->
+                        FolioToast(data.visuals.message, data.visuals.actionLabel, onAction = { data.performAction() })
                     }
                 }
                 hero?.let { h ->
@@ -199,7 +227,7 @@ class MainActivity : ComponentActivity() {
                         onToggleFinished = { app.store.setFinished(book.id, !book.finished); sheetFor = null },
                         onRemove = {
                             sheetFor = null
-                            scope.launch { app.store.remove(book.id); messages.send("Removed “${book.title}”") }
+                            scope.launch { app.store.remove(book.id); say("Removed “${book.title}”") }
                         },
                     )
                 }
@@ -227,7 +255,7 @@ class MainActivity : ComponentActivity() {
             importing = true
             val book = runCatching { folio.importer.importDocument(uri) }.getOrNull()
             importing = false
-            if (book != null) openReader(book) else messages.send("That file isn't a CBZ or PDF Folio can read.")
+            if (book != null) openReader(book) else say("That file isn't a CBZ or PDF Folio can read.")
         }
     }
 
@@ -240,10 +268,10 @@ class MainActivity : ComponentActivity() {
             folio.catalog.download(ch).onSuccess { ok++; last = it }.onFailure { if (it !is IllegalStateException) failed++ }
         }
         when {
-            failed > 0 && ok == 0 -> messages.send("Couldn't download right now. Check your connection and try again.")
-            failed > 0 -> messages.send("Added $ok · $failed didn't download")
-            ok == 1 -> messages.send("“${last!!.title}” is on your shelf")
-            ok > 1 -> messages.send("Added $ok chapters to your shelf")
+            failed > 0 && ok == 0 -> say("Couldn't download right now. Check your connection and try again.")
+            failed > 0 -> say("Added $ok · $failed didn't download")
+            ok == 1 -> say("“${last!!.title}” is on your shelf")
+            ok > 1 -> say("Added $ok chapters to your shelf")
         }
     }
 
@@ -253,7 +281,7 @@ class MainActivity : ComponentActivity() {
         uris.forEach { if (runCatching { folio.importer.importDocument(it) }.getOrNull() != null) ok++ }
         importing = false
         val failed = uris.size - ok
-        messages.send(
+        say(
             when {
                 ok == 0 -> "Nothing imported — Folio reads CBZ and PDF files."
                 failed > 0 -> "Added $ok · skipped $failed unsupported"
@@ -267,7 +295,7 @@ class MainActivity : ComponentActivity() {
         importing = true
         val books = runCatching { folio.importer.importTree(uri) }.getOrDefault(emptyList())
         importing = false
-        messages.send(if (books.isEmpty()) "No comics found in that folder." else "Added ${books.size} from the folder")
+        say(if (books.isEmpty()) "No comics found in that folder." else "Added ${books.size} from the folder")
     }
 
     override fun onResume() {

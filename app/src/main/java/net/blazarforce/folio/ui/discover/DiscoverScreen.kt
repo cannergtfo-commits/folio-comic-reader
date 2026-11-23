@@ -1,6 +1,13 @@
 package net.blazarforce.folio.ui.discover
 
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.ui.platform.testTag
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -86,6 +93,7 @@ import kotlinx.coroutines.delay
 import net.blazarforce.folio.ui.common.DashEyebrow
 import net.blazarforce.folio.ui.common.GhostButton
 import net.blazarforce.folio.ui.common.GoldButton
+import net.blazarforce.folio.ui.common.GoldRule
 import net.blazarforce.folio.ui.common.LocalMotion
 import net.blazarforce.folio.ui.common.NewBadge
 import net.blazarforce.folio.ui.common.SkeletonBlock
@@ -112,8 +120,12 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlin.math.roundToInt
 
-/** Online library: series and chapters from the published catalog, one tap onto the shelf. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Online library. The top level lists each comic (series) as a card; tapping one opens its own
+ * page with the blurb, Get all and the chapter list. [openSeries] is hoisted so Back and the
+ * "new chapters" pop-up can drive it.
+ */
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun DiscoverScreen(
     state: LibraryState,
@@ -124,19 +136,72 @@ fun DiscoverScreen(
     onGetAll: (CatalogSeries) -> Unit,
     onRead: (CatalogChapter) -> Unit,
     onUpdate: (AppRelease) -> Unit,
+    openSeries: String? = null,
+    onOpenSeries: (String?) -> Unit = {},
     now: Long = System.currentTimeMillis(),
 ) {
-    val p = LocalPalette.current
-    val cat = state.catalog
-    val pull = rememberPullToRefreshState()
+    val reduce = LocalMotion.current.reduce
+    val selected = openSeries?.let { id -> state.catalog?.series?.firstOrNull { it.id == id } }
     val entrance = rememberEntranceTracker()
+    val listState = rememberLazyListState()
     fun isNew(ch: CatalogChapter) = ch.id !in state.seen && ch.bookId !in shelfIds
+    SharedTransitionLayout(Modifier.fillMaxSize()) {
+        AnimatedContent(
+            targetState = selected,
+            contentKey = { it?.id },
+            transitionSpec = {
+                if (reduce) fadeIn(tween(120)) togetherWith fadeOut(tween(90))
+                else {
+                    val forward = targetState != null
+                    (fadeIn(tween(300, delayMillis = 60)) + scaleIn(tween(380, easing = FastOutSlowInEasing), initialScale = if (forward) 0.96f else 1.03f)) togetherWith
+                        (fadeOut(tween(200)) + scaleOut(tween(300), targetScale = if (forward) 1.03f else 0.96f))
+                }
+            },
+            label = "discover-nav",
+        ) { s ->
+            val hero = HeroScopes(this@SharedTransitionLayout, this, enabled = !reduce)
+            if (s == null) {
+                DiscoverList(state, shelfIds, update, ::isNew, onRefresh, onUpdate, onOpenSeries, now, entrance, listState, hero)
+            } else {
+                DiscoverSeriesPage(
+                    s, state, shelfIds, ::isNew, onRefresh, onGet = onGet, onGetAll = { onGetAll(s) }, onRead = onRead,
+                    onBack = { onOpenSeries(null) }, hero = hero,
+                )
+            }
+        }
+    }
+}
 
+/** Shared-element plumbing for the cover hero between the comics list and a comic's page. */
+@OptIn(ExperimentalSharedTransitionApi::class)
+internal class HeroScopes(
+    val shared: SharedTransitionScope,
+    val visibility: androidx.compose.animation.AnimatedVisibilityScope,
+    val enabled: Boolean,
+)
+
+@OptIn(ExperimentalSharedTransitionApi::class)
+@Composable
+private fun Modifier.coverHero(key: String, hero: HeroScopes?): Modifier {
+    if (hero == null || !hero.enabled) return this
+    return with(hero.shared) {
+        this@coverHero.sharedElement(
+            rememberSharedContentState("discover-cover:$key"), hero.visibility,
+            boundsTransform = { _, _ -> androidx.compose.animation.core.spring(dampingRatio = 0.86f, stiffness = 340f) },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DiscoverFrame(state: LibraryState, onRefresh: () -> Unit, glow: androidx.compose.ui.geometry.Offset?, content: @Composable () -> Unit) {
+    val p = LocalPalette.current
+    val pull = rememberPullToRefreshState()
     PullToRefreshBox(
         isRefreshing = state.refreshing,
         onRefresh = onRefresh,
         state = pull,
-        modifier = Modifier.fillMaxSize().background(p.canvas).softGlow(p.glow, androidx.compose.ui.geometry.Offset(0.9f, 0.04f), 0.8f),
+        modifier = Modifier.fillMaxSize().background(p.canvas).then(if (glow != null) Modifier.softGlow(p.glow, glow, 0.8f) else Modifier),
         indicator = {
             PullToRefreshDefaults.Indicator(
                 state = pull, isRefreshing = state.refreshing,
@@ -144,8 +209,27 @@ fun DiscoverScreen(
                 containerColor = p.raised, color = p.accent,
             )
         },
-    ) {
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 22.dp)) {
+    ) { content() }
+}
+
+@Composable
+private fun DiscoverList(
+    state: LibraryState,
+    shelfIds: Set<String>,
+    update: AppRelease?,
+    isNew: (CatalogChapter) -> Boolean,
+    onRefresh: () -> Unit,
+    onUpdate: (AppRelease) -> Unit,
+    onOpenSeries: (String?) -> Unit,
+    now: Long,
+    entrance: net.blazarforce.folio.ui.common.EntranceTracker,
+    listState: androidx.compose.foundation.lazy.LazyListState,
+    hero: HeroScopes?,
+) {
+    val p = LocalPalette.current
+    val cat = state.catalog
+    DiscoverFrame(state, onRefresh, androidx.compose.ui.geometry.Offset(0.9f, 0.04f)) {
+        LazyColumn(Modifier.fillMaxSize().testTag("discover-list"), state = listState, contentPadding = PaddingValues(horizontal = 22.dp)) {
             item(key = "head") {
                 Column(Modifier.statusBarsPadding()) {
                     Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -166,35 +250,247 @@ fun DiscoverScreen(
             if (cat == null) {
                 item(key = "empty") { EmptyLibrary(state, onRefresh) }
             } else {
-                cat.series.forEach { s ->
-                    item(key = "s:" + s.id) {
-                        Box(Modifier.staggeredEntrance(entrance, "s:" + s.id, 0)) { SeriesHero(
-                            s, state.covers, newCount = s.chapters.count(::isNew),
-                            missing = s.chapters.count { it.bookId !in shelfIds },
-                            busy = s.chapters.any { it.id in state.downloads },
-                            onGetAll = { onGetAll(s) },
-                        ) }
+                item(key = "comics-head") {
+                    Column {
+                        Row(verticalAlignment = Alignment.Bottom) {
+                            Text("Comics", style = MaterialTheme.typography.headlineSmall, color = p.text)
+                            Spacer(Modifier.weight(1f))
+                            val n = cat.series.size
+                            Text(
+                                (if (n == 1) "1 series" else "$n series") + " · ${cat.chapters.size} chapters",
+                                style = MaterialTheme.typography.labelMedium, color = p.muted,
+                            )
+                        }
                         Spacer(Modifier.height(10.dp))
+                        GoldRule()
+                        Spacer(Modifier.height(18.dp))
                     }
-                    itemsIndexed(s.chapters, key = { _, it -> "c:" + it.id }) { i, ch ->
-                        Box(Modifier.staggeredEntrance(entrance, "c:" + ch.id, i + 1)) { ChapterRow(
-                            ch, state.covers[ch.cover], isNew(ch), ch.bookId in shelfIds, state.downloads[ch.id],
-                            onGet = { onGet(ch) }, onRead = { onRead(ch) },
-                        ) }
+                }
+                itemsIndexed(cat.series, key = { _, s -> "s:" + s.id }) { i, s ->
+                    Box(Modifier.staggeredEntrance(entrance, "s:" + s.id, i)) {
+                        SeriesCard(
+                            s, state.covers,
+                            newCount = s.chapters.count(isNew),
+                            onShelf = s.chapters.count { it.bookId in shelfIds },
+                            busy = s.chapters.any { it.id in state.downloads },
+                            onClick = { onOpenSeries(s.id) }, hero = hero,
+                        )
                     }
-                    item(key = "gap:" + s.id) { Spacer(Modifier.height(30.dp)) }
+                    Spacer(Modifier.height(16.dp))
                 }
                 item(key = "note") {
                     Text(
-                        "Pull down to check for new chapters. Downloads go to your shelf and stay readable offline.",
+                        "Tap a comic to see its chapters. Pull down to check for new ones.",
                         style = MaterialTheme.typography.bodySmall, color = p.faint, textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
                     )
                 }
             }
             item(key = "foot") {
                 Column {
                     Spacer(Modifier.height(104.dp))
+                    Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
+                }
+            }
+        }
+    }
+}
+
+private fun seriesCover(s: CatalogSeries, covers: Map<String, String>): String? =
+    covers[s.cover] ?: s.chapters.firstOrNull()?.cover?.let { covers[it] }
+
+@Composable
+private fun SeriesCard(
+    s: CatalogSeries,
+    covers: Map<String, String>,
+    newCount: Int,
+    onShelf: Int,
+    busy: Boolean,
+    onClick: () -> Unit,
+    hero: HeroScopes?,
+) {
+    val p = LocalPalette.current
+    val coverPath = seriesCover(s, covers)
+    val shape = RoundedCornerShape(24.dp)
+    val src = remember { MutableInteractionSource() }
+    val total = s.chapters.size
+    Box(
+        Modifier.fillMaxWidth().springPress(src, 0.975f).foilCard(shape, 20.dp)
+            .clickable(src, null, onClickLabel = "Open ${s.title}", onClick = onClick).testTag("series:" + s.id),
+    ) {
+        rememberCover(coverPath)?.let { bmp ->
+            Image(
+                bmp.asImageBitmap(), null, contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize().blur(30.dp).graphicsLayer { alpha = if (p.isInk) 0.32f else 0.2f },
+            )
+        }
+        Box(Modifier.matchParentSize().background(Brush.horizontalGradient(listOf(p.surface, p.surface.copy(alpha = 0.9f), p.surface.copy(alpha = 0.55f)))))
+        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Cover(coverPath, s.title, Modifier.coverHero(s.id, hero).width(96.dp).aspectRatio(COVER_ASPECT), elevation = 22.dp)
+            Spacer(Modifier.width(16.dp))
+            Column(Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(if (total == 1) "1 CHAPTER" else "$total CHAPTERS", style = Eyebrow, color = p.accent, maxLines = 1)
+                    if (newCount > 0) { Spacer(Modifier.width(8.dp)); NewBadge("$newCount NEW") }
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(s.title, style = MaterialTheme.typography.headlineSmall, color = p.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                s.author?.let {
+                    Text(it, style = MaterialTheme.typography.titleSmall.copy(fontStyle = FontStyle.Italic), color = p.muted, maxLines = 1)
+                }
+                s.description?.let {
+                    Spacer(Modifier.height(6.dp))
+                    Text(it, style = MaterialTheme.typography.bodySmall, color = p.muted, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                }
+                Spacer(Modifier.height(12.dp))
+                ShelfHint(onShelf, total, busy)
+            }
+            Spacer(Modifier.width(8.dp))
+            Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = p.accent, modifier = Modifier.size(18.dp))
+        }
+    }
+}
+
+/** "3 of 8 on your shelf" with a gold bar, or a check when they're all there. */
+@Composable
+private fun ShelfHint(onShelf: Int, total: Int, busy: Boolean) {
+    val p = LocalPalette.current
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        when {
+            busy -> {
+                CircularProgressIndicator(Modifier.size(12.dp), color = p.accent, strokeWidth = 1.5.dp)
+                Spacer(Modifier.width(8.dp))
+                Text("Downloading…", style = MaterialTheme.typography.labelMedium, color = p.muted)
+            }
+            total > 0 && onShelf >= total -> {
+                Icon(Icons.Outlined.CheckCircle, null, tint = p.accent, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("All on your shelf", style = MaterialTheme.typography.labelMedium, color = p.muted)
+            }
+            onShelf > 0 -> {
+                net.blazarforce.folio.ui.common.ProgressLine(onShelf / total.toFloat(), Modifier.width(56.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("$onShelf of $total on your shelf", style = MaterialTheme.typography.labelMedium, color = p.muted)
+            }
+            else -> Text("Not on your shelf yet", style = MaterialTheme.typography.labelMedium, color = p.faint)
+        }
+    }
+}
+
+/** One comic's page: parallax blurred cover, blurb, Get all, and the chapter list. */
+@Composable
+private fun DiscoverSeriesPage(
+    s: CatalogSeries,
+    state: LibraryState,
+    shelfIds: Set<String>,
+    isNew: (CatalogChapter) -> Boolean,
+    onRefresh: () -> Unit,
+    onGet: (CatalogChapter) -> Unit,
+    onGetAll: () -> Unit,
+    onRead: (CatalogChapter) -> Unit,
+    onBack: () -> Unit,
+    hero: HeroScopes?,
+) {
+    val p = LocalPalette.current
+    val reduce = LocalMotion.current.reduce
+    val list = rememberLazyListState()
+    val entrance = rememberEntranceTracker()
+    val coverPath = seriesCover(s, state.covers)
+    val missing = s.chapters.count { it.bookId !in shelfIds }
+    val busy = s.chapters.any { it.id in state.downloads }
+    val newCount = s.chapters.count(isNew)
+    DiscoverFrame(state, onRefresh, glow = null) {
+        LazyColumn(Modifier.fillMaxSize().testTag("discover-series"), state = list) {
+            item(key = "header") {
+                Box(Modifier.fillMaxWidth().clipToBounds()) {
+                    rememberCover(coverPath)?.let { bmp ->
+                        Image(
+                            bmp.asImageBitmap(), null, contentScale = ContentScale.Crop,
+                            modifier = Modifier.matchParentSize().graphicsLayer {
+                                val off = if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset.toFloat() else size.height
+                                translationY = if (reduce) 0f else off * 0.5f
+                                alpha = (if (p.isInk) 0.5f else 0.34f) * (1f - (off / size.height).coerceIn(0f, 1f))
+                                scaleX = 1.15f; scaleY = 1.15f
+                            }.blur(36.dp),
+                        )
+                    }
+                    Box(
+                        Modifier.matchParentSize().background(
+                            Brush.verticalGradient(listOf(p.canvas.copy(alpha = 0.35f), p.canvas.copy(alpha = 0.78f), p.canvas)),
+                        ).softGlow(p.glow, androidx.compose.ui.geometry.Offset(0.3f, 0.55f), 0.6f),
+                    )
+                    Column(
+                        Modifier.statusBarsPadding().padding(horizontal = 12.dp).graphicsLayer {
+                            val off = if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset.toFloat() else 0f
+                            if (!reduce) translationY = off * 0.18f
+                        },
+                    ) {
+                        androidx.compose.material3.IconButton(onClick = onBack, modifier = Modifier.padding(top = 4.dp)) {
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = p.text)
+                        }
+                        Row(Modifier.padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 22.dp), verticalAlignment = Alignment.Bottom) {
+                            Cover(coverPath, s.title, Modifier.coverHero(s.id, hero).width(140.dp).aspectRatio(COVER_ASPECT), elevation = 30.dp)
+                            Spacer(Modifier.width(20.dp))
+                            Column(Modifier.weight(1f)) {
+                                DashEyebrow("ONLINE LIBRARY")
+                                Spacer(Modifier.height(8.dp))
+                                Text(s.title, style = MaterialTheme.typography.displayMedium, color = p.text, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                                s.author?.let {
+                                    Text(it, style = MaterialTheme.typography.titleMedium.copy(fontStyle = FontStyle.Italic), color = p.muted)
+                                }
+                                Spacer(Modifier.height(8.dp))
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    val total = s.chapters.size
+                                    Text(if (total == 1) "1 chapter" else "$total chapters", style = MaterialTheme.typography.bodySmall, color = p.muted)
+                                    if (newCount > 0) { Spacer(Modifier.width(8.dp)); NewBadge("$newCount NEW") }
+                                }
+                                Spacer(Modifier.height(14.dp))
+                                if (missing > 0) {
+                                    GoldButton(
+                                        if (missing == s.chapters.size) "Get all $missing" else "Get the other $missing", onGetAll,
+                                        icon = Icons.Outlined.Download, enabled = !busy, height = 42.dp,
+                                    )
+                                } else {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(Icons.Outlined.CheckCircle, null, tint = p.accent, modifier = Modifier.size(16.dp))
+                                        Spacer(Modifier.width(6.dp))
+                                        Text("All on your shelf", style = MaterialTheme.typography.labelMedium, color = p.muted)
+                                    }
+                                }
+                            }
+                        }
+                        s.description?.let { d ->
+                            Text(
+                                d, style = MaterialTheme.typography.bodyLarge, color = p.muted,
+                                modifier = Modifier.padding(horizontal = 10.dp).padding(bottom = 24.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            item(key = "rule") {
+                Column(Modifier.padding(horizontal = 22.dp)) {
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text("Chapters", style = MaterialTheme.typography.headlineSmall, color = p.text)
+                        Spacer(Modifier.weight(1f))
+                        Text("${s.chapters.size - missing} of ${s.chapters.size} on your shelf", style = MaterialTheme.typography.labelMedium, color = p.muted)
+                    }
+                    Spacer(Modifier.height(10.dp))
+                    GoldRule()
+                    Spacer(Modifier.height(4.dp))
+                }
+            }
+            itemsIndexed(s.chapters, key = { _, it -> "c:" + it.id }) { i, ch ->
+                Box(Modifier.padding(horizontal = 22.dp).staggeredEntrance(entrance, "c:" + ch.id, i)) {
+                    ChapterRow(
+                        ch, state.covers[ch.cover], isNew(ch), ch.bookId in shelfIds, state.downloads[ch.id],
+                        onGet = { onGet(ch) }, onRead = { onRead(ch) },
+                    )
+                }
+            }
+            item(key = "foot") {
+                Column {
+                    Spacer(Modifier.height(40.dp))
                     Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
                 }
             }
@@ -230,63 +526,6 @@ private fun prettyDate(iso: String?): String? = iso?.let {
 }
 
 private fun mb(bytes: Long) = if (bytes <= 0) null else "%.1f MB".format(bytes / 1_048_576.0)
-
-@Composable
-private fun SeriesHero(
-    s: CatalogSeries,
-    covers: Map<String, String>,
-    newCount: Int,
-    missing: Int,
-    busy: Boolean,
-    onGetAll: () -> Unit,
-) {
-    val p = LocalPalette.current
-    val coverPath = covers[s.cover] ?: covers[s.chapters.first().cover]
-    val shape = RoundedCornerShape(26.dp)
-    Box(Modifier.fillMaxWidth().foilCard(shape, 24.dp)) {
-        rememberCover(coverPath)?.let { bmp ->
-            Image(
-                bmp.asImageBitmap(), null, contentScale = ContentScale.Crop,
-                modifier = Modifier.matchParentSize().blur(34.dp).graphicsLayer { alpha = if (p.isInk) 0.34f else 0.22f },
-            )
-        }
-        Box(Modifier.matchParentSize().background(Brush.horizontalGradient(listOf(p.surface, p.surface.copy(alpha = 0.9f), p.surface.copy(alpha = 0.5f)))))
-        Column(Modifier.padding(18.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Cover(coverPath, s.title, Modifier.width(112.dp).aspectRatio(COVER_ASPECT), elevation = 26.dp)
-                Spacer(Modifier.width(18.dp))
-                Column(Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("${s.chapters.size} CHAPTERS", style = Eyebrow, color = p.accent, maxLines = 1)
-                        if (newCount > 0) { Spacer(Modifier.width(8.dp)); NewBadge("$newCount NEW") }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Text(s.title, style = MaterialTheme.typography.headlineSmall, color = p.text, maxLines = 3, overflow = TextOverflow.Ellipsis)
-                    s.author?.let {
-                        Text(it, style = MaterialTheme.typography.titleMedium.copy(fontStyle = FontStyle.Italic), color = p.muted)
-                    }
-                    Spacer(Modifier.height(14.dp))
-                    if (missing > 0) {
-                        GoldButton(
-                            if (missing == s.chapters.size) "Get all $missing" else "Get the other $missing", onGetAll,
-                            icon = Icons.Outlined.Download, enabled = !busy, height = 40.dp,
-                        )
-                    } else {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Outlined.CheckCircle, null, tint = p.accent, modifier = Modifier.size(16.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text("All on your shelf", style = MaterialTheme.typography.labelMedium, color = p.muted)
-                        }
-                    }
-                }
-            }
-            s.description?.let {
-                Spacer(Modifier.height(14.dp))
-                Text(it, style = MaterialTheme.typography.bodyMedium, color = p.muted, maxLines = 4, overflow = TextOverflow.Ellipsis)
-            }
-        }
-    }
-}
 
 @Composable
 private fun NewPill(text: String) {

@@ -242,13 +242,13 @@ class ScreenshotTest {
         return state to ch.take(2).map { it.bookId }.toSet()
     }
 
-    private fun discoverShot(theme: AppTheme, name: String, scrollTo: Int = 0) {
+    private fun discoverShot(theme: AppTheme, name: String, scrollTo: Int = 0, series: String? = null) {
         val (state, shelf) = discoverState()
         compose.setContent {
             FolioTheme(theme, motion = still) {
                 Box(Modifier.fillMaxSize()) {
-                    net.blazarforce.folio.ui.discover.DiscoverScreen(state, shelf, null, {}, {}, {}, {}, {})
-                    net.blazarforce.folio.ui.discover.TabSwitch(
+                    net.blazarforce.folio.ui.discover.DiscoverScreen(state, shelf, null, {}, {}, {}, {}, {}, openSeries = series)
+                    if (series == null) net.blazarforce.folio.ui.discover.TabSwitch(
                         true, 3, {}, {},
                         Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp),
                     )
@@ -261,9 +261,15 @@ class ScreenshotTest {
 
     @Test fun discoverInk() = discoverShot(AppTheme.INK, "13_discover_ink.png")
 
-    @Test fun discoverInkChapters() = discoverShot(AppTheme.INK, "14_discover_chapters_ink.png", scrollTo = 3)
+    @Test fun discoverSeriesInk() = discoverShot(AppTheme.INK, "14_discover_series_ink.png", series = "lyra-bw")
 
     @Test fun discoverPaper() = discoverShot(AppTheme.PAPER, "15_discover_paper.png")
+
+    @Test fun discoverSeriesPaper() = discoverShot(AppTheme.PAPER, "21_discover_series_paper.png", series = "lyra-bw")
+
+    @Test fun discoverSeriesChapters() = discoverShot(AppTheme.INK, "22_discover_series_chapters_ink.png", scrollTo = 4, series = "lyra-bw")
+
+    @Test fun discoverSecondSeries() = discoverShot(AppTheme.INK, "23_discover_series_dead_letter_riders.png", series = "dead-letter-riders")
 
     @Test
     fun discoverOfflineEmpty() {

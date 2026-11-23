@@ -182,18 +182,24 @@ val NoPadding = PaddingValues(0.dp)
 
 /** Snackbar replacement: raised glass card with a gold spark, gold-edged hairline and deep shadow. */
 @Composable
-fun FolioToast(message: String) {
+fun FolioToast(message: String, action: String? = null, onAction: () -> Unit = {}) {
     val p = LocalPalette.current
     val shape = RoundedCornerShape(18.dp)
     Row(
         Modifier.fillMaxWidth().shadow(24.dp, shape, ambientColor = p.shadow, spotColor = p.shadow).clip(shape)
-            .background(p.raised).border(0.8.dp, p.goldEdge, shape).padding(horizontal = 16.dp, vertical = 14.dp),
+            .background(p.raised).border(0.8.dp, p.goldEdge, shape)
+            .then(if (action != null) Modifier.clickable(onClick = onAction) else Modifier)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(28.dp).background(p.goldBrush, RoundedCornerShape(50)), contentAlignment = Alignment.Center) {
             Icon(androidx.compose.material.icons.Icons.Outlined.AutoAwesome, null, tint = p.onAccent, modifier = Modifier.size(15.dp))
         }
         Spacer(Modifier.width(12.dp))
-        Text(message, style = MaterialTheme.typography.bodyMedium, color = p.text)
+        Text(message, style = MaterialTheme.typography.bodyMedium, color = p.text, modifier = Modifier.weight(1f))
+        if (action != null) {
+            Spacer(Modifier.width(10.dp))
+            Text(action.uppercase(), style = net.blazarforce.folio.ui.theme.Eyebrow, color = p.accent)
+        }
     }
 }
