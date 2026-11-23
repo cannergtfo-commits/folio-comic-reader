@@ -34,13 +34,15 @@ class CatalogTest {
     fun localCatalogParses() {
         assumeTrue(local.exists())
         val c = Catalog.parse(local.readText())
-        assertEquals(1, c.series.size)
+        // More series get published over time; Lyra must stay first and keep its id.
+        assertTrue(c.series.isNotEmpty())
+        assertEquals(c.series.size, c.series.map { it.id }.toSet().size)
         val s = c.series.first()
         assertEquals("lyra-bw", s.id)
         assertEquals("Lyra", s.title)
         assertEquals(listOf(1.0, 2.0, 3.0, 4.0, 5.0, 6.0), s.chapters.map { it.number }.take(6))
         assertEquals(listOf(7, 9, 9, 13, 13, 13), s.chapters.map { it.pages }.take(6))
-        s.chapters.forEach {
+        c.chapters.forEach {
             assertTrue(it.cbz.startsWith("https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/"))
             assertTrue(it.size > 1_000_000)
             assertNotNull(it.cover)
