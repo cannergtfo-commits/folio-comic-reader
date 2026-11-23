@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Folio Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-23T05:00:37Z",
+  "updated": "2026-11-23T05:00:43Z",
   "app": {
     "version": "1.1",
     "versionCode": 2,
@@ -95,6 +95,17 @@
           "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch7_BW.cbz",
           "file": "Lyra_Ch7_BW.cbz",
           "size": 15519684,
+          "pages": 13,
+          "published": "2026-11-22"
+        },
+        {
+          "id": "lyra-bw-8",
+          "number": 8,
+          "title": "Chapter 8: The Maker's Sword",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/lyra-bw-8.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch8_BW.cbz",
+          "file": "Lyra_Ch8_BW.cbz",
+          "size": 15577129,
           "pages": 13,
           "published": "2026-11-22"
         }
