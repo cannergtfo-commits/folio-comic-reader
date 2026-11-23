@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Folio Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-23T07:56:58Z",
+  "updated": "2026-11-23T08:23:18Z",
   "app": {
     "version": "1.3",
     "versionCode": 4,
@@ -185,6 +185,17 @@
           "size": 9783870,
           "pages": 21,
           "published": "2026-11-22"
+        },
+        {
+          "id": "undirheim-2",
+          "number": 2,
+          "title": "Chapter 2: The Whale-King's Road",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-2.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch2.cbz",
+          "file": "Undirheim_Ch2.cbz",
+          "size": 7960880,
+          "pages": 17,
+          "published": "2026-11-23"
         }
       ]
     }
