@@ -57,9 +57,20 @@
           "size": 16259251,
           "pages": 13,
           "published": "2026-11-22"
+        },
+        {
+          "id": "lyra-bw-5",
+          "number": 5,
+          "title": "Chapter 5: Everything We Can Carry",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/lyra-bw-5.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch5_BW.cbz",
+          "file": "Lyra_Ch5_BW.cbz",
+          "size": 16038250,
+          "pages": 13,
+          "published": "2026-11-22"
         }
       ]
     }
   ],
-  "updated": "2026-11-23T04:41:48Z"
+  "updated": "2026-11-23T04:41:54Z"
 }
