@@ -1,5 +1,19 @@
 package net.blazarforce.folio.ui.library
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.ui.draw.clip
+import androidx.compose.runtime.remember
+import net.blazarforce.folio.ui.common.DashEyebrow
+import net.blazarforce.folio.ui.common.GoldButton
+import net.blazarforce.folio.ui.common.GoldRule
+import net.blazarforce.folio.ui.common.LocalMotion
+import net.blazarforce.folio.ui.common.rememberEntranceTracker
+import net.blazarforce.folio.ui.common.softGlow
+import net.blazarforce.folio.ui.common.springPress
+import net.blazarforce.folio.ui.common.staggeredEntrance
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -64,30 +78,44 @@ fun SeriesScreen(
 ) {
     val p = LocalPalette.current
     val next = series.next
-    LazyColumn(Modifier.fillMaxSize().background(p.canvas), contentPadding = PaddingValues(bottom = 24.dp)) {
+    val list = rememberLazyListState()
+    val entrance = rememberEntranceTracker()
+    val reduce = LocalMotion.current.reduce
+    LazyColumn(Modifier.fillMaxSize().background(p.canvas), state = list, contentPadding = PaddingValues(bottom = 24.dp)) {
         item(key = "header") {
             Box(Modifier.fillMaxWidth()) {
+                // Parallax backdrop: the blurred cover drifts at half speed and dims as you scroll.
                 rememberCover(series.books.first().coverPath)?.let { bmp ->
                     Image(
                         bmp.asImageBitmap(), null, contentScale = ContentScale.Crop,
-                        modifier = Modifier.matchParentSize().blur(40.dp).graphicsLayer { alpha = if (p.isInk) 0.35f else 0.25f },
+                        modifier = Modifier.matchParentSize().graphicsLayer {
+                            val off = if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset.toFloat() else size.height
+                            translationY = if (reduce) 0f else off * 0.5f
+                            alpha = (if (p.isInk) 0.5f else 0.34f) * (1f - (off / size.height).coerceIn(0f, 1f))
+                            scaleX = 1.15f; scaleY = 1.15f
+                        }.blur(36.dp),
                     )
                 }
                 Box(
                     Modifier.matchParentSize().background(
-                        Brush.verticalGradient(listOf(p.canvas.copy(alpha = 0.55f), p.canvas.copy(alpha = 0.85f), p.canvas)),
-                    ),
+                        Brush.verticalGradient(listOf(p.canvas.copy(alpha = 0.35f), p.canvas.copy(alpha = 0.78f), p.canvas)),
+                    ).softGlow(p.glow, androidx.compose.ui.geometry.Offset(0.3f, 0.55f), 0.6f),
                 )
-                Column(Modifier.statusBarsPadding().padding(horizontal = 12.dp)) {
+                Column(
+                    Modifier.statusBarsPadding().padding(horizontal = 12.dp).graphicsLayer {
+                        val off = if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset.toFloat() else 0f
+                        if (!reduce) translationY = off * 0.18f
+                    },
+                ) {
                     IconButton(onClick = onBack, modifier = Modifier.padding(top = 4.dp)) {
                         Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = p.text)
                     }
-                    Row(Modifier.padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 28.dp), verticalAlignment = Alignment.Bottom) {
-                        Cover(next.coverPath, next.title, Modifier.width(132.dp).aspectRatio(COVER_ASPECT), elevation = 24.dp)
+                    Row(Modifier.padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 30.dp), verticalAlignment = Alignment.Bottom) {
+                        Cover(next.coverPath, next.title, Modifier.width(140.dp).aspectRatio(COVER_ASPECT), elevation = 30.dp, heroKey = next.id)
                         Spacer(Modifier.width(20.dp))
                         Column(Modifier.weight(1f)) {
-                            Text("SERIES", style = Eyebrow, color = p.accent)
-                            Spacer(Modifier.height(6.dp))
+                            DashEyebrow("SERIES")
+                            Spacer(Modifier.height(8.dp))
                             Text(series.name, style = MaterialTheme.typography.displayMedium, color = p.text, maxLines = 3, overflow = TextOverflow.Ellipsis)
                             Spacer(Modifier.height(6.dp))
                             val pages = series.books.sumOf { it.pageCount }
@@ -95,32 +123,33 @@ fun SeriesScreen(
                                 "${series.books.size} ${(series.books.first().numberLabel ?: "issue").lowercase()}s · $pages pages",
                                 style = MaterialTheme.typography.bodySmall, color = p.muted,
                             )
+                            Spacer(Modifier.height(10.dp))
+                            ProgressLine(series.progress, Modifier.width(120.dp))
                             Spacer(Modifier.height(14.dp))
-                            Button(
-                                onClick = { onOpen(next) },
-                                colors = ButtonDefaults.buttonColors(containerColor = p.accent, contentColor = if (p.isInk) Color(0xFF1A1408) else Color.White),
-                                contentPadding = PaddingValues(horizontal = 18.dp, vertical = 8.dp),
-                                modifier = Modifier.height(40.dp),
-                            ) {
-                                Text(
-                                    (if (next.started && !next.finished) "Continue · " else "Begin · ") + next.shortLabel,
-                                    style = MaterialTheme.typography.labelLarge, maxLines = 1,
-                                )
-                            }
+                            GoldButton(
+                                (if (next.started && !next.finished) "Continue · " else "Begin · ") + next.shortLabel,
+                                { onOpen(next) }, height = 42.dp,
+                            )
                         }
                     }
                 }
             }
         }
         item(key = "rule") {
-            Row(Modifier.padding(horizontal = 22.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Contents", style = MaterialTheme.typography.headlineSmall, color = p.text)
-                Spacer(Modifier.weight(1f))
-                Text("${series.readCount} of ${series.books.size} read", style = MaterialTheme.typography.labelMedium, color = p.muted)
+            Column(Modifier.padding(horizontal = 22.dp, vertical = 6.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("Contents", style = MaterialTheme.typography.headlineSmall, color = p.text)
+                    Spacer(Modifier.weight(1f))
+                    Text("${series.readCount} of ${series.books.size} read", style = MaterialTheme.typography.labelMedium, color = p.muted)
+                }
+                Spacer(Modifier.height(10.dp))
+                GoldRule()
             }
         }
-        items(series.books, key = { it.id }) { book ->
-            ChapterRow(book, book.id == next.id, { onOpen(book) }, { onLongPress(book) })
+        itemsIndexed(series.books, key = { _, b -> b.id }) { i, book ->
+            Box(Modifier.staggeredEntrance(entrance, book.id, i)) {
+                ChapterRow(book, book.id == next.id, { onOpen(book) }, { onLongPress(book) })
+            }
         }
         item { Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars)) }
     }
@@ -130,10 +159,18 @@ fun SeriesScreen(
 @Composable
 private fun ChapterRow(book: Book, isNext: Boolean, onClick: () -> Unit, onLongClick: () -> Unit) {
     val p = LocalPalette.current
-    Column(Modifier.combinedClickable(onClick = onClick, onLongClick = onLongClick).padding(horizontal = 22.dp)) {
-        Box(Modifier.fillMaxWidth().height(0.7.dp).background(p.hairline))
-        Row(Modifier.padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-            Cover(book.coverPath, book.title, Modifier.width(62.dp).aspectRatio(COVER_ASPECT), elevation = 8.dp)
+    val src = remember { MutableInteractionSource() }
+    Column(
+        Modifier.springPress(src, 0.97f).combinedClickable(interactionSource = src, indication = null, onClick = onClick, onLongClick = onLongClick)
+            .padding(horizontal = 22.dp),
+    ) {
+        Row(
+            Modifier.padding(vertical = 8.dp).then(
+                if (isNext) Modifier.clip(RoundedCornerShape(16.dp)).background(p.accentSoft.copy(alpha = 0.5f)).border(0.7.dp, p.goldEdge, RoundedCornerShape(16.dp)) else Modifier,
+            ).padding(horizontal = if (isNext) 10.dp else 0.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Cover(book.coverPath, book.title, Modifier.width(62.dp).aspectRatio(COVER_ASPECT), elevation = 10.dp, heroKey = book.id)
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 enum class AppTheme { INK, PAPER }
 enum class ReadingMode { PAGED, SPREAD, WEBTOON }
-enum class PageTurn { SLIDE, FADE, NONE }
+/** SLIDE: classic swipe. BOOK: 3D page flip around the spine. DEPTH: the page sinks back as the next slides over. */
+enum class PageTurn { SLIDE, BOOK, DEPTH, FADE, NONE }
 
 data class Settings(
     val theme: AppTheme = AppTheme.INK,

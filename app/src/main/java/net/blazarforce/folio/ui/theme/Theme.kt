@@ -1,5 +1,10 @@
 package net.blazarforce.folio.ui.theme
 
+import net.blazarforce.folio.ui.common.FolioMotion
+import net.blazarforce.folio.ui.common.LocalMotion
+import net.blazarforce.folio.ui.common.systemReducesMotion
+import androidx.compose.ui.graphics.Brush
+
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -44,7 +49,18 @@ data class FolioPalette(
     val accentSoft: Color,
     val hairline: Color,
     val shadow: Color,
-)
+    /** Highlight and deep ends of the gold foil. */
+    val goldHi: Color = Color(0xFFF3DFAE),
+    val goldLo: Color = Color(0xFFA9844A),
+    /** Ink on top of gold. */
+    val onAccent: Color = Color(0xFF1A1408),
+    /** Warm glow used for soft lighting behind hero content. */
+    val glow: Color = Color(0x2EC9A96E),
+) {
+    /** Foil gradient for primary buttons, badges and the active tab. */
+    val goldBrush: Brush get() = Brush.linearGradient(listOf(goldHi, accent, goldLo))
+    val goldEdge: Brush get() = Brush.linearGradient(listOf(goldHi.copy(alpha = 0.75f), accent.copy(alpha = 0.18f), goldLo.copy(alpha = 0.55f)))
+}
 
 val InkPalette = FolioPalette(
     isInk = true,
@@ -72,6 +88,10 @@ val PaperPalette = FolioPalette(
     accentSoft = Color(0x268E6A2C),
     hairline = Color(0x1F1F1C18),
     shadow = Color(0xFF3A2E1E),
+    goldHi = Color(0xFFC79B4E),
+    goldLo = Color(0xFF6E5020),
+    onAccent = Color(0xFFFFFBF2),
+    glow = Color(0x228E6A2C),
 )
 
 val LocalPalette = staticCompositionLocalOf { InkPalette }
@@ -97,7 +117,9 @@ private fun typography(p: FolioPalette) = Typography(
 val Eyebrow = TextStyle(fontFamily = Sans, fontWeight = FontWeight.SemiBold, fontSize = 10.5.sp, letterSpacing = 0.18.em)
 
 @Composable
-fun FolioTheme(theme: AppTheme, content: @Composable () -> Unit) {
+fun FolioTheme(theme: AppTheme, motion: FolioMotion? = null, content: @Composable () -> Unit) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val m = motion ?: androidx.compose.runtime.remember(ctx) { FolioMotion(reduce = ctx.systemReducesMotion(), ambient = FolioMotion.ambientByDefault) }
     val p = if (theme == AppTheme.INK) InkPalette else PaperPalette
     val scheme = if (p.isInk) darkColorScheme(
         primary = p.accent, onPrimary = Color(0xFF1A1408), secondary = p.accent,
@@ -112,7 +134,8 @@ fun FolioTheme(theme: AppTheme, content: @Composable () -> Unit) {
         surfaceContainer = p.surface, surfaceContainerHigh = p.raised, surfaceContainerLow = p.surface,
         secondaryContainer = p.accentSoft, onSecondaryContainer = p.text,
     )
-    CompositionLocalProvider(LocalPalette provides p) {
+    CompositionLocalProvider(LocalPalette provides p, LocalMotion provides m) {
         MaterialTheme(colorScheme = scheme, typography = typography(p), content = content)
     }
 }
+

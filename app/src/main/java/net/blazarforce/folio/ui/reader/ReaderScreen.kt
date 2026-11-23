@@ -1,5 +1,12 @@
 package net.blazarforce.folio.ui.reader
 
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.zIndex
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideOutVertically
+import net.blazarforce.folio.ui.common.LocalMotion
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -161,6 +168,10 @@ fun ReaderScreen(
     // Navigation requests from the overlay are funnelled through this; each mode installs a handler.
     var jumpTo by remember { mutableStateOf<((Int) -> Unit)?>(null) }
 
+    val reduceMotion = LocalMotion.current.reduce
+    val intro = remember { androidx.compose.animation.core.Animatable(if (reduceMotion) 1f else 0f) }
+    LaunchedEffect(Unit) { intro.animateTo(1f, androidx.compose.animation.core.tween(560, easing = androidx.compose.animation.core.CubicBezierEasing(0.2f, 0f, 0f, 1f))) }
+
     BoxWithConstraints(Modifier.fillMaxSize().background(readerBg)) {
         val wide = maxWidth > maxHeight
         val mode = when {
@@ -171,6 +182,12 @@ fun ReaderScreen(
         }
         val toggleUi = { touched = true; uiVisible = !uiVisible }
 
+        Box(Modifier.fillMaxSize().graphicsLayer {
+            val v = intro.value
+            alpha = 0.35f + 0.65f * v
+            val sc = 0.955f + 0.045f * v
+            scaleX = sc; scaleY = sc
+        }) {
         if (mode == ReadingMode.WEBTOON) {
             WebtoonReader(
                 book, loader, page, nextBook, readerBg,
@@ -193,12 +210,29 @@ fun ReaderScreen(
                 )
             }
         }
+        }
 
         // Warm "night paper" filter.
         if (settings.warmth > 0.01f) {
             Canvas(Modifier.fillMaxSize()) {
                 drawRect(Color(0xFFFF9E45).copy(alpha = settings.warmth * 0.32f), blendMode = BlendMode.Multiply)
                 drawRect(Color(0xFF2A1400).copy(alpha = settings.warmth * 0.10f))
+            }
+        }
+
+        // Immersive reading: a whisper-thin gold progress line along the bottom edge.
+        AnimatedVisibility(
+            !uiVisible && !atEnd && count > 1, Modifier.align(Alignment.BottomCenter),
+            enter = fadeIn(tween(600)), exit = fadeOut(tween(200)),
+        ) {
+            val prog by animateFloatAsState(if (count <= 1) 1f else page / (count - 1f), tween(450), label = "imm")
+            Canvas(Modifier.fillMaxWidth().height(2.dp)) {
+                drawRect(p.hairline)
+                drawRect(
+                    Brush.horizontalGradient(listOf(Color(0x00C9A96E), p.accent, Color(0xFFF3DFAE))),
+                    size = androidx.compose.ui.geometry.Size(size.width * prog, size.height),
+                    topLeft = if (rtl) androidx.compose.ui.geometry.Offset(size.width * (1f - prog), 0f) else androidx.compose.ui.geometry.Offset.Zero,
+                )
             }
         }
 
@@ -243,6 +277,8 @@ private fun PagedReader(
     register: (((Int) -> Unit)?) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+    val reduce = LocalMotion.current.reduce
+    val turnFx = effectivePageTurn(turn, reduce)
     val state = rememberPagerState(initialPage = units.unitOf(startPage)) { units.size + 1 }
     val zooms = remember(units) { HashMap<Int, ZoomState>() }
     val currentZoom = zooms.getOrPut(state.currentPage) { ZoomState() }
@@ -257,6 +293,7 @@ private fun PagedReader(
         val target = unit.coerceIn(0, units.size)
         when {
             turn == PageTurn.NONE || abs(target - state.currentPage) > 2 -> state.scrollToPage(target)
+            turnFx == PageTurn.BOOK -> state.animateScrollToPage(target, animationSpec = tween(620, easing = FastOutSlowInEasing))
             else -> state.animateScrollToPage(target, animationSpec = tween(420, easing = FastOutSlowInEasing))
         }
     }
@@ -273,11 +310,12 @@ private fun PagedReader(
         modifier = Modifier.fillMaxSize(),
     ) { u ->
         val pageOffset = (state.currentPage - u) + state.currentPageOffsetFraction
-        val layer = Modifier.graphicsLayer {
-            when (turn) {
+        val dirSign = if (rtl) -1f else 1f
+        val layer = Modifier.zIndex(if (turnFx == PageTurn.BOOK && pageOffset > 0f) 1f else 0f).graphicsLayer {
+            when (turnFx) {
                 PageTurn.FADE -> {
                     // Mostly cancel the slide (a 12% drift remains) and cross-fade instead.
-                    translationX = pageOffset * size.width * 0.88f * (if (rtl) -1f else 1f)
+                    translationX = pageOffset * size.width * 0.88f * dirSign
                     alpha = 1f - abs(pageOffset).coerceIn(0f, 1f)
                 }
                 PageTurn.SLIDE -> {
@@ -285,9 +323,48 @@ private fun PagedReader(
                     val f = abs(pageOffset).coerceIn(0f, 1f)
                     alpha = 1f - f * 0.25f
                 }
+                PageTurn.BOOK -> {
+                    // Pages stay stacked; the leaving page swings around the spine like a real leaf.
+                    translationX = pageOffset * size.width * dirSign
+                    if (pageOffset > 0f) {
+                        val f = pageOffset.coerceIn(0f, 1f)
+                        transformOrigin = androidx.compose.ui.graphics.TransformOrigin(if (rtl) 1f else 0f, 0.5f)
+                        rotationY = f * 96f * dirSign
+                        cameraDistance = 18f * density
+                        alpha = if (f > 0.92f) 0f else 1f
+                    } else {
+                        // The page underneath brightens from shadow as it's revealed.
+                        alpha = 1f
+                    }
+                }
+                PageTurn.DEPTH -> {
+                    if (pageOffset > 0f) {
+                        val f = pageOffset.coerceIn(0f, 1f)
+                        translationX = pageOffset * size.width * dirSign
+                        val sc = 1f - 0.14f * f
+                        scaleX = sc; scaleY = sc
+                        alpha = 1f - f
+                    }
+                }
                 PageTurn.NONE -> Unit
             }
-        }
+        }.then(
+            if (turnFx == PageTurn.BOOK) Modifier.drawWithContent {
+                drawContent()
+                val f = pageOffset
+                if (f > 0f) {
+                    // Curl shading on the turning leaf.
+                    drawRect(
+                        Brush.horizontalGradient(
+                            listOf(Color.Black.copy(alpha = 0.05f + 0.45f * f), Color.White.copy(alpha = 0.10f * f), Color.Black.copy(alpha = 0.25f * f)),
+                            startX = if (rtl) size.width else 0f, endX = if (rtl) 0f else size.width,
+                        ),
+                    )
+                } else if (f < 0f) {
+                    drawRect(Color.Black.copy(alpha = 0.33f * (-f).coerceIn(0f, 1f)))
+                }
+            } else Modifier,
+        )
         if (u >= units.size) {
             EndCard(book, nextBook, onOpenNext, onBack, onAgain = { scope.launch { state.scrollToPage(0) } }, modifier = layer)
             return@HorizontalPager
@@ -483,12 +560,12 @@ private fun ReaderOverlay(
             ) {
                 Row(
                     Modifier.windowInsetsPadding(WindowInsets.statusBarsIgnoringVisibility)
-                        .padding(start = 6.dp, end = 10.dp, top = 6.dp, bottom = 28.dp),
+                        .padding(start = 6.dp, end = 10.dp, top = 8.dp, bottom = 34.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = p.text) }
                     Column(Modifier.weight(1f).padding(start = 4.dp)) {
-                        Text((book.series ?: "Folio").uppercase(), style = Eyebrow, color = p.accent, maxLines = 1)
+                        net.blazarforce.folio.ui.common.DashEyebrow((book.series ?: "Folio").uppercase())
                         Spacer(Modifier.height(2.dp))
                         Text(
                             if (book.series != null) book.shortLabel else book.title,
@@ -557,7 +634,7 @@ private fun BottomBar(page: Int, count: Int, rtl: Boolean, thumbs: PageLoader, s
                                     .shadow(if (selected) 10.dp else 2.dp, RoundedCornerShape(3.dp))
                                     .clip(RoundedCornerShape(3.dp))
                                     .background(p.raised)
-                                    .then(if (selected) Modifier.border(1.2.dp, p.accent, RoundedCornerShape(3.dp)) else Modifier)
+                                    .then(if (selected) Modifier.border(1.4.dp, p.goldBrush, RoundedCornerShape(3.dp)) else Modifier)
                                     .clickable { onJump(i) },
                             ) {
                                 Thumb(thumbs, i, Modifier.fillMaxSize())
@@ -575,7 +652,15 @@ private fun BottomBar(page: Int, count: Int, rtl: Boolean, thumbs: PageLoader, s
                 Row(Modifier.padding(horizontal = 22.dp), verticalAlignment = Alignment.CenterVertically) {
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
                         Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.widthIn(min = 64.dp)) {
-                            Text("${shown + 1}", style = MaterialTheme.typography.headlineSmall, color = p.text)
+                            AnimatedContent(
+                                shown,
+                                transitionSpec = {
+                                    val up = targetState > initialState
+                                    (slideInVertically(tween(220)) { if (up) it / 2 else -it / 2 } + fadeIn(tween(220))) togetherWith
+                                        (slideOutVertically(tween(180)) { if (up) -it / 2 else it / 2 } + fadeOut(tween(160)))
+                                },
+                                label = "pageNo",
+                            ) { n -> Text("${n + 1}", style = MaterialTheme.typography.headlineMedium, color = p.text) }
                             Text(" / $count", style = MaterialTheme.typography.bodySmall, color = p.muted, modifier = Modifier.padding(bottom = 3.dp))
                         }
                     }
@@ -603,8 +688,8 @@ private fun BottomBar(page: Int, count: Int, rtl: Boolean, thumbs: PageLoader, s
         ) {
             Column(
                 Modifier.graphicsLayer { translationY = -size.height * 0.95f }
-                    .shadow(24.dp, RoundedCornerShape(10.dp)).clip(RoundedCornerShape(10.dp))
-                    .background(p.raised).padding(8.dp),
+                    .shadow(28.dp, RoundedCornerShape(14.dp), ambientColor = p.accent, spotColor = p.shadow).clip(RoundedCornerShape(14.dp))
+                    .background(p.raised).border(0.8.dp, p.goldEdge, RoundedCornerShape(14.dp)).padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Thumb(thumbs, shown, Modifier.height(170.dp).aspectRatio(0.75f).clip(RoundedCornerShape(4.dp)))
@@ -624,3 +709,7 @@ private fun Thumb(thumbs: PageLoader, index: Int, modifier: Modifier) {
         }
     }
 }
+
+/** Under reduce-motion the 3D turns (page flip, depth) fall back to a plain cross-fade. */
+internal fun effectivePageTurn(turn: PageTurn, reduceMotion: Boolean): PageTurn =
+    if (reduceMotion && (turn == PageTurn.BOOK || turn == PageTurn.DEPTH)) PageTurn.FADE else turn

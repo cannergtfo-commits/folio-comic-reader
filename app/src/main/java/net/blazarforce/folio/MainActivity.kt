@@ -54,6 +54,11 @@ import net.blazarforce.folio.data.buildShelf
 import net.blazarforce.folio.ui.discover.DiscoverScreen
 import net.blazarforce.folio.ui.discover.TabSwitch
 import net.blazarforce.folio.ui.library.BookSheet
+import net.blazarforce.folio.ui.common.CoverBounds
+import net.blazarforce.folio.ui.common.FolioToast
+import net.blazarforce.folio.ui.common.HeroLaunch
+import net.blazarforce.folio.ui.common.HeroZoom
+import net.blazarforce.folio.ui.common.systemReducesMotion
 import net.blazarforce.folio.ui.library.LibraryScreen
 import net.blazarforce.folio.ui.library.SeriesScreen
 import net.blazarforce.folio.ui.reader.ReaderActivity
@@ -65,10 +70,20 @@ import net.blazarforce.folio.ui.theme.PaperPalette
 class MainActivity : ComponentActivity() {
     private val messages = Channel<String>(Channel.BUFFERED)
     private var importing by mutableStateOf(false)
+    private var hero by mutableStateOf<HeroLaunch?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
+        val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
+        splash.setOnExitAnimationListener { provider ->
+            if (systemReducesMotion()) { provider.remove(); return@setOnExitAnimationListener }
+            runCatching {
+                val ease = android.view.animation.PathInterpolator(0.3f, 0f, 0.2f, 1f)
+                provider.iconView.animate().scaleX(1.22f).scaleY(1.22f).alpha(0f).setDuration(420).setInterpolator(ease).start()
+                provider.view.animate().alpha(0f).setStartDelay(140).setDuration(380).setInterpolator(ease)
+                    .withEndAction { provider.remove() }.start()
+            }.onFailure { provider.remove() }
+        }
         val app = folio
         applyBars(app.prefs.settings.value.theme)
 
@@ -164,10 +179,15 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(start = 16.dp, end = 16.dp, bottom = if (series == null) 76.dp else 16.dp)) { data ->
-                        Snackbar(
-                            containerColor = p.raised, contentColor = p.text, shape = RoundedCornerShape(12.dp),
-                        ) { Text(data.visuals.message, style = MaterialTheme.typography.bodyMedium) }
+                        FolioToast(data.visuals.message)
                     }
+                }
+                hero?.let { h ->
+                    HeroZoom(
+                        h, backdrop = if (p.isInk) androidx.compose.ui.graphics.Color(0xFF0A0908) else androidx.compose.ui.graphics.Color(0xFFEDE7DB),
+                        onArrived = { launchReader(h.book, h.fromStart) },
+                        onReturned = { hero = null },
+                    )
                 }
                 sheetFor?.let { b ->
                     val book = books.firstOrNull { it.id == b.id } ?: return@let
@@ -250,7 +270,20 @@ class MainActivity : ComponentActivity() {
         messages.send(if (books.isEmpty()) "No comics found in that folder." else "Added ${books.size} from the folder")
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Coming back from the reader: settle the cover back onto the shelf.
+        hero?.let { h -> hero = if (h.returning) null else h.copy(returning = true) }
+    }
+
     private fun openReader(book: Book, fromStart: Boolean = false) {
+        val from = CoverBounds[book.id]
+        if (hero == null && from != null && from.width > 0f && book.coverPath != null && !systemReducesMotion()) {
+            hero = HeroLaunch(book, from, fromStart)
+        } else launchReader(book, fromStart)
+    }
+
+    private fun launchReader(book: Book, fromStart: Boolean) {
         val intent = Intent(this, ReaderActivity::class.java)
             .putExtra(ReaderActivity.EXTRA_BOOK, book.id)
             .putExtra(ReaderActivity.EXTRA_FROM_START, fromStart)

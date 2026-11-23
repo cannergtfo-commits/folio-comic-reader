@@ -1,5 +1,8 @@
 package net.blazarforce.folio.ui.reader
 
+import androidx.compose.runtime.remember
+import net.blazarforce.folio.ui.common.springPress
+
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -71,6 +74,7 @@ fun ReaderSettingsSheet(
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ReaderSettingsContent(
     settings: Settings,
@@ -82,7 +86,8 @@ fun ReaderSettingsContent(
     Column(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).navigationBarsPadding().padding(bottom = 16.dp),
     ) {
-        Text("Reading", style = MaterialTheme.typography.headlineMedium, color = p.text)
+        Text("Reading", style = MaterialTheme.typography.displaySmall, color = p.text)
+        Text("Make the page yours.", style = MaterialTheme.typography.bodyMedium.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic), color = p.muted)
         Spacer(Modifier.height(18.dp))
 
         Section("LAYOUT")
@@ -101,10 +106,15 @@ fun ReaderSettingsContent(
         }
 
         Section("PAGE TURN")
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        androidx.compose.foundation.layout.FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             PageTurn.entries.forEach { t ->
                 Pill(
-                    when (t) { PageTurn.SLIDE -> "Slide"; PageTurn.FADE -> "Fade"; PageTurn.NONE -> "Instant" },
+                    when (t) {
+                        PageTurn.SLIDE -> "Slide"; PageTurn.BOOK -> "Page flip"; PageTurn.DEPTH -> "Depth"
+                        PageTurn.FADE -> "Fade"; PageTurn.NONE -> "Instant"
+                    },
                     settings.pageTurn == t,
                 ) { onSettings { it.copy(pageTurn = t) } }
             }
@@ -145,20 +155,21 @@ private fun sliderColors() = LocalPalette.current.let { p ->
 @Composable
 private fun Section(label: String) {
     val p = LocalPalette.current
-    Spacer(Modifier.height(18.dp))
-    Text(label, style = Eyebrow, color = p.accent)
-    Spacer(Modifier.height(10.dp))
+    Spacer(Modifier.height(22.dp))
+    net.blazarforce.folio.ui.common.DashEyebrow(label)
+    Spacer(Modifier.height(12.dp))
 }
 
 @Composable
 private fun RowScope.Tile(icon: ImageVector, label: String, selected: Boolean, onClick: () -> Unit) {
     val p = LocalPalette.current
     val border by animateColorAsState(if (selected) p.accent else p.hairline, label = "tile")
-    val bg by animateColorAsState(if (selected) p.accentSoft else Color.Transparent, label = "tilebg")
+    val bg by animateColorAsState(if (selected) p.accentSoft else p.raised.copy(alpha = 0.35f), label = "tilebg")
+    val src = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Column(
-        Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(bg)
-            .border(if (selected) 1.dp else 0.7.dp, border, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick).padding(vertical = 14.dp),
+        Modifier.weight(1f).springPress(src, 0.94f).clip(RoundedCornerShape(16.dp)).background(bg)
+            .border(if (selected) 1.dp else 0.7.dp, border, RoundedCornerShape(16.dp))
+            .clickable(src, null, onClick = onClick).padding(vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(icon, null, tint = if (selected) p.accent else p.muted, modifier = Modifier.size(22.dp))
@@ -170,14 +181,16 @@ private fun RowScope.Tile(icon: ImageVector, label: String, selected: Boolean, o
 @Composable
 private fun Pill(label: String, selected: Boolean, onClick: () -> Unit) {
     val p = LocalPalette.current
+    val src = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val fg by animateColorAsState(if (selected) p.onAccent else p.muted, label = "pill")
     Text(
         label,
         style = MaterialTheme.typography.labelMedium,
-        color = if (selected) p.text else p.muted,
-        modifier = Modifier.clip(RoundedCornerShape(50))
-            .background(if (selected) p.accentSoft else Color.Transparent)
-            .border(0.8.dp, if (selected) p.accent else p.hairline, RoundedCornerShape(50))
-            .clickable(onClick = onClick).padding(horizontal = 14.dp, vertical = 8.dp),
+        color = fg,
+        modifier = Modifier.springPress(src, 0.92f).clip(RoundedCornerShape(50))
+            .then(if (selected) Modifier.background(p.goldBrush) else Modifier.background(Color.Transparent))
+            .border(0.8.dp, if (selected) Color.Transparent else p.hairline, RoundedCornerShape(50))
+            .clickable(src, null, onClick = onClick).padding(horizontal = 15.dp, vertical = 9.dp),
     )
 }
 
