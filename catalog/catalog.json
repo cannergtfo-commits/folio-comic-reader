@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Folio Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-23T08:23:18Z",
+  "updated": "2026-11-23T09:02:38Z",
   "app": {
     "version": "1.3",
     "versionCode": 4,
@@ -195,6 +195,17 @@
           "file": "Undirheim_Ch2.cbz",
           "size": 7960880,
           "pages": 17,
+          "published": "2026-11-23"
+        },
+        {
+          "id": "undirheim-3",
+          "number": 3,
+          "title": "Chapter 3: Throat of the World",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-3.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch3.cbz",
+          "file": "Undirheim_Ch3.cbz",
+          "size": 9058501,
+          "pages": 20,
           "published": "2026-11-23"
         }
       ]
