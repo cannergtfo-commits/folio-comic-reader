@@ -207,6 +207,17 @@
           "size": 9027878,
           "pages": 20,
           "published": "2026-11-23"
+        },
+        {
+          "id": "undirheim-4",
+          "number": 4,
+          "title": "Chapter 4: The Antlered Wanderer",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-4.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch4.cbz",
+          "file": "Undirheim_Ch4.cbz",
+          "size": 9201757,
+          "pages": 19,
+          "published": "2026-11-23"
         }
       ]
     }
