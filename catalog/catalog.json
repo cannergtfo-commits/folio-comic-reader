@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Folio Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-23T06:00:07Z",
+  "updated": "2026-11-23T07:56:58Z",
   "app": {
     "version": "1.3",
     "versionCode": 4,
@@ -156,6 +156,34 @@
           "file": "DeadLetterRiders_Ch3.cbz",
           "size": 5237272,
           "pages": 13,
+          "published": "2026-11-22"
+        }
+      ]
+    },
+    {
+      "id": "undirheim",
+      "title": "Undirheim",
+      "author": "Manga-chan",
+      "description": "Spiral-marked shieldmaiden Ylva Sigrunsdottir finally earns her oar on the Cormorant clan's whale hunt... but the sea is already turning. A Viking shonen saga of a hidden inner world, wild galdr magic, and a lost mother's sword. New chapters Saturdays.",
+      "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-1.jpg",
+      "tags": [
+        "action",
+        "fantasy",
+        "shonen",
+        "viking",
+        "black & white",
+        "original"
+      ],
+      "chapters": [
+        {
+          "id": "undirheim-1",
+          "number": 1,
+          "title": "Chapter 1: Spiral-Marked",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-1.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch1.cbz",
+          "file": "Undirheim_Ch1.cbz",
+          "size": 9783870,
+          "pages": 21,
           "published": "2026-11-22"
         }
       ]
