@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "name": "Folio Library",
+  "publisher": "Blazar Force",
+  "series": [
+    {
+      "id": "lyra-bw",
+      "title": "Lyra (B&W edition)",
+      "author": "Blazar Force",
+      "description": "An elf alone in the woods, a key she was never meant to hold, and the last of the purebloods. The black-and-white edition of Lyra, with new chapters here as soon as they're out.",
+      "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/lyra-bw-1.jpg",
+      "tags": [
+        "fantasy",
+        "black & white"
+      ],
+      "chapters": [
+        {
+          "id": "lyra-bw-1",
+          "number": 1,
+          "title": "Chapter 1: Alone in the Woods",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/lyra-bw-1.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch1_BW.cbz",
+          "file": "Lyra_Ch1_BW.cbz",
+          "size": 8257188,
+          "pages": 7,
+          "published": "2026-11-22"
+        }
+      ]
+    }
+  ],
+  "updated": "2026-11-23T04:41:28Z"
+}
