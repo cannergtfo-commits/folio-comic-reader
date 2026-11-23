@@ -180,20 +180,20 @@
           "number": 1,
           "title": "Chapter 1: Spiral-Marked",
           "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-1.jpg",
-          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch1_v2.cbz",
-          "file": "Undirheim_Ch1_v2.cbz",
-          "size": 9763052,
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch1_v3.cbz",
+          "file": "Undirheim_Ch1_v3.cbz",
+          "size": 9704094,
           "pages": 21,
-          "published": "2026-11-22"
+          "published": "2026-11-23"
         },
         {
           "id": "undirheim-2",
           "number": 2,
           "title": "Chapter 2: The Whale-King's Road",
           "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-2.jpg",
-          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch2_v2.cbz",
-          "file": "Undirheim_Ch2_v2.cbz",
-          "size": 7966703,
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch2_v3.cbz",
+          "file": "Undirheim_Ch2_v3.cbz",
+          "size": 7820872,
           "pages": 17,
           "published": "2026-11-23"
         },
@@ -202,9 +202,9 @@
           "number": 3,
           "title": "Chapter 3: Throat of the World",
           "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-3.jpg",
-          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch3.cbz",
-          "file": "Undirheim_Ch3.cbz",
-          "size": 9058501,
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch3_v3.cbz",
+          "file": "Undirheim_Ch3_v3.cbz",
+          "size": 9057880,
           "pages": 20,
           "published": "2026-11-23"
         }
