@@ -135,7 +135,7 @@ class ScreenshotTest {
         val list = library()
         compose.setContent {
             FolioTheme(theme, motion = still) {
-                LibraryScreen(list, theme, false, {}, {}, {}, {}, {}, {}, hour = 20)
+                LibraryScreen(list, theme, false, {}, {}, {}, {}, {}, {})
             }
         }
         snap(name)

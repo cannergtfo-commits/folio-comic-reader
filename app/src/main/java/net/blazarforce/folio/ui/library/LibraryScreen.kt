@@ -97,7 +97,6 @@ import net.blazarforce.folio.ui.common.springPress
 import net.blazarforce.folio.ui.common.staggeredEntrance
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import net.blazarforce.folio.ui.theme.LocalPalette
-import java.util.Calendar
 
 enum class ShelfFilter(val label: String) { ALL("All"), READING("Reading"), UNREAD("Unread"), FINISHED("Finished") }
 
@@ -106,12 +105,6 @@ private fun Book.matches(f: ShelfFilter) = when (f) {
     ShelfFilter.READING -> inProgress
     ShelfFilter.UNREAD -> !started
     ShelfFilter.FINISHED -> finished
-}
-
-fun greeting(hour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)) = when (hour) {
-    in 5..11 -> "Good morning"
-    in 12..17 -> "Good afternoon"
-    else -> "Good evening"
 }
 
 @Composable
@@ -126,7 +119,6 @@ fun LibraryScreen(
     onOpenSeries: (String) -> Unit,
     onLongPress: (Book) -> Unit,
     onDiscover: (() -> Unit)? = null,
-    hour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
 ) {
     val p = LocalPalette.current
     val entrance = rememberEntranceTracker()
@@ -154,20 +146,9 @@ fun LibraryScreen(
             item(span = { GridItemSpan(maxLineSpan) }, key = "brand") {
                 Column(Modifier.statusBarsPadding()) {
                     BrandBar(theme, importing, onToggleTheme, onImportFiles, onImportFolder, inset = false)
-                    Spacer(Modifier.height(20.dp))
-                    DashEyebrow(java.text.SimpleDateFormat("EEEE · MMMM d", java.util.Locale.getDefault()).format(java.util.Date()).uppercase())
-                    Spacer(Modifier.height(10.dp))
-                    Text("${greeting(hour)}.", style = MaterialTheme.typography.displayLarge, color = p.text)
-                    Spacer(Modifier.height(6.dp))
-                    val reading = books.count { it.inProgress }
-                    Text(
-                        buildString {
-                            append(if (books.size == 1) "One book" else "${books.size} books")
-                            append(" on the shelf")
-                            if (reading > 0) append(" · $reading in progress")
-                        },
-                        style = MaterialTheme.typography.bodyMedium, color = p.muted,
-                    )
+                    Spacer(Modifier.height(14.dp))
+                    GoldRule()
+                    Spacer(Modifier.height(18.dp))
                 }
             }
             if (continueBook != null) {
@@ -178,7 +159,17 @@ fun LibraryScreen(
             item(span = { GridItemSpan(maxLineSpan) }, key = "filters") {
                 Column {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text("The Shelf", style = MaterialTheme.typography.headlineSmall, color = p.text)
+                        Column {
+                            Text("The Shelf", style = MaterialTheme.typography.headlineSmall, color = p.text)
+                            val reading = books.count { it.inProgress }
+                            Text(
+                                buildString {
+                                    append(if (books.size == 1) "One book" else "${books.size} books")
+                                    if (reading > 0) append(" · $reading in progress")
+                                },
+                                style = MaterialTheme.typography.bodySmall, color = p.muted,
+                            )
+                        }
                         Spacer(Modifier.weight(1f))
                         FilterTabs(filter) { filter = it }
                     }
