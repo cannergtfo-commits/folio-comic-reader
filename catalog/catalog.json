@@ -35,9 +35,20 @@
           "size": 10512421,
           "pages": 9,
           "published": "2026-11-22"
+        },
+        {
+          "id": "lyra-bw-3",
+          "number": 3,
+          "title": "Chapter 3: The Last Purebloods",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/lyra-bw-3.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch3_BW.cbz",
+          "file": "Lyra_Ch3_BW.cbz",
+          "size": 9414529,
+          "pages": 9,
+          "published": "2026-11-22"
         }
       ]
     }
   ],
-  "updated": "2026-11-23T04:41:35Z"
+  "updated": "2026-11-23T04:41:41Z"
 }
