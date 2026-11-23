@@ -4,10 +4,10 @@
   "publisher": "Blazar Force",
   "updated": "2026-11-23T06:00:07Z",
   "app": {
-    "version": "1.1",
-    "versionCode": 2,
-    "apk": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/v1.1/Folio.apk",
-    "notes": "Online library, one-tap chapter downloads, and a new icon."
+    "version": "1.2",
+    "versionCode": 3,
+    "apk": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/v1.2/Folio.apk",
+    "notes": "A polished ink-and-gold look, cover-to-reader zoom, Page flip and Depth page turns, and animated downloads."
   },
   "series": [
     {
