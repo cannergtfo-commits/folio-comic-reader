@@ -24,9 +24,20 @@
           "size": 8257188,
           "pages": 7,
           "published": "2026-11-22"
+        },
+        {
+          "id": "lyra-bw-2",
+          "number": 2,
+          "title": "Chapter 2: The Key",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/lyra-bw-2.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch2_BW.cbz",
+          "file": "Lyra_Ch2_BW.cbz",
+          "size": 10512421,
+          "pages": 9,
+          "published": "2026-11-22"
         }
       ]
     }
   ],
-  "updated": "2026-11-23T04:41:28Z"
+  "updated": "2026-11-23T04:41:35Z"
 }
