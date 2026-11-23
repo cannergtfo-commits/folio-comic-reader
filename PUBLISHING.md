@@ -12,7 +12,7 @@ Cover thumbnails live in `catalog/covers/`. When the catalog changes, every copy
 
 ```bash
 cd folio-comic-reader            # this repo
-python3 tools/publish_chapter.py ~/comics/Lyra_Ch7_BW.cbz --series "Lyra (B&W edition)" --series-id lyra-bw
+python3 tools/publish_chapter.py ~/comics/Lyra_Ch7_BW.cbz --series "Lyra" --series-id lyra-bw
 ```
 
 The title and number come from the CBZ's `ComicInfo.xml` (the comic maker writes it), or pass `--title "…" --number 7`.
@@ -54,7 +54,7 @@ Delete its entry from `catalog/catalog.json` and push. Leave the release asset, 
   "schema": 1,
   "app": { "version": "1.1", "versionCode": 2, "apk": "https://…/Folio.apk", "notes": "…" }, // update banner
   "series": [{
-    "id": "lyra-bw", "title": "Lyra (B&W edition)", "author": "…", "description": "…",
+    "id": "lyra-bw", "title": "Lyra", "author": "…", "description": "…",
     "cover": "https://…/catalog/covers/lyra-bw-1.jpg", "tags": ["…"],
     "chapters": [{
       "id": "lyra-bw-1", "number": 1, "title": "Chapter 1: Alone in the Woods",

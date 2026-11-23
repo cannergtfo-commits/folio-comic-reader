@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Publish a comic chapter to Folio's online library.
 
-    python3 tools/publish_chapter.py path/to/Chapter.cbz --series "Lyra (B&W edition)"
+    python3 tools/publish_chapter.py path/to/Chapter.cbz --series "Lyra"
 
 What it does:
   1. Reads the CBZ (page count, ComicInfo.xml title/number, cover page).
@@ -95,7 +95,10 @@ def main():
     if not path.lower().endswith(".cbz") or not os.path.isfile(path):
         sys.exit("Give me a .cbz file.")
     pages, info, cover_bytes = read_cbz(path)
-    series = a.series or info.get("Series") or sys.exit("Pass --series (no Series in ComicInfo.xml).")
+    cat = load_catalog()
+    known = next((x for x in cat["series"] if a.series_id and x["id"] == a.series_id), None)
+    # An existing series keeps its display name unless --series is passed (ComicInfo may say otherwise).
+    series = a.series or (known or {}).get("title") or info.get("Series") or sys.exit("Pass --series (no Series in ComicInfo.xml).")
     number = a.number if a.number is not None else (float(info["Number"]) if "Number" in info else None)
     if number is None:
         m = re.search(r"(?:ch|chapter|issue|_)\s*0*(\d+(?:\.\d+)?)", os.path.basename(path), re.I)
@@ -110,7 +113,6 @@ def main():
     cover_url = f"https://raw.githubusercontent.com/{REPO}/main/catalog/covers/{cover_name}"
     cbz_url = f"https://github.com/{REPO}/releases/download/{TAG}/{file_name}"
 
-    cat = load_catalog()
     s = next((x for x in cat["series"] if x["id"] == sid), None)
     if s is None:
         s = {"id": sid, "title": series, "author": a.author, "description": a.description,

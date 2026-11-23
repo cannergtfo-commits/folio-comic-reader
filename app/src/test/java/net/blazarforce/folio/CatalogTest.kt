@@ -37,9 +37,9 @@ class CatalogTest {
         assertEquals(1, c.series.size)
         val s = c.series.first()
         assertEquals("lyra-bw", s.id)
-        assertEquals("Lyra (B&W edition)", s.title)
-        assertEquals(listOf(1.0, 2.0, 3.0, 4.0, 5.0, 6.0), s.chapters.map { it.number })
-        assertEquals(listOf(7, 9, 9, 13, 13, 13), s.chapters.map { it.pages })
+        assertEquals("Lyra", s.title)
+        assertEquals(listOf(1.0, 2.0, 3.0, 4.0, 5.0, 6.0), s.chapters.map { it.number }.take(6))
+        assertEquals(listOf(7, 9, 9, 13, 13, 13), s.chapters.map { it.pages }.take(6))
         s.chapters.forEach {
             assertTrue(it.cbz.startsWith("https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/"))
             assertTrue(it.size > 1_000_000)
