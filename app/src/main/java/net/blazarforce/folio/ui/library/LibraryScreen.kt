@@ -112,6 +112,7 @@ fun LibraryScreen(
     onOpen: (Book) -> Unit,
     onOpenSeries: (String) -> Unit,
     onLongPress: (Book) -> Unit,
+    onDiscover: (() -> Unit)? = null,
     hour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
 ) {
     val p = LocalPalette.current
@@ -125,7 +126,7 @@ fun LibraryScreen(
         if (books.isEmpty()) {
             Column(Modifier.fillMaxSize().statusBarsPadding()) {
                 BrandBar(theme, importing, onToggleTheme, onImportFiles, onImportFolder)
-                EmptyShelf(onImportFiles, onImportFolder)
+                EmptyShelf(onImportFiles, onImportFolder, onDiscover)
             }
             return@Box
         }
@@ -185,7 +186,7 @@ fun LibraryScreen(
             }
             item(span = { GridItemSpan(maxLineSpan) }, key = "foot") {
                 Column {
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(if (onDiscover != null) 96.dp else 24.dp))
                     Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.navigationBars))
                 }
             }
@@ -406,7 +407,7 @@ private fun SeriesCard(series: ShelfItem.Series, onClick: () -> Unit) {
 }
 
 @Composable
-private fun EmptyShelf(onImportFiles: () -> Unit, onImportFolder: () -> Unit) {
+private fun EmptyShelf(onImportFiles: () -> Unit, onImportFolder: () -> Unit, onDiscover: (() -> Unit)?) {
     val p = LocalPalette.current
     Column(
         Modifier.fillMaxSize().padding(horizontal = 36.dp),
@@ -425,7 +426,7 @@ private fun EmptyShelf(onImportFiles: () -> Unit, onImportFolder: () -> Unit) {
         Text("A quiet shelf.", style = MaterialTheme.typography.displaySmall, color = p.text, textAlign = TextAlign.Center)
         Spacer(Modifier.height(10.dp))
         Text(
-            "Bring in your comics — CBZ, PDF, or a folder of page images. Everything stays on this device.",
+            "Bring in your comics — CBZ, PDF, or a folder of page images — or get new chapters from Discover. Everything you read stays on this device.",
             style = MaterialTheme.typography.bodyMedium, color = p.muted, textAlign = TextAlign.Center,
             modifier = Modifier.widthIn(max = 320.dp),
         )
@@ -449,6 +450,13 @@ private fun EmptyShelf(onImportFiles: () -> Unit, onImportFolder: () -> Unit) {
             Icon(Icons.Outlined.FolderOpen, null, Modifier.size(18.dp), tint = p.muted)
             Spacer(Modifier.width(10.dp))
             Text("Choose a folder", style = MaterialTheme.typography.labelLarge)
+        }
+        if (onDiscover != null) {
+            Spacer(Modifier.height(18.dp))
+            Text(
+                "Or browse the online library →", style = MaterialTheme.typography.labelLarge, color = p.accent,
+                modifier = Modifier.clickable(onClick = onDiscover).padding(8.dp),
+            )
         }
         Spacer(Modifier.height(80.dp))
     }

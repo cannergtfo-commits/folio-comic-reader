@@ -16,7 +16,6 @@ import net.blazarforce.folio.comic.NaturalOrder
 import net.blazarforce.folio.comic.PageSource
 import net.blazarforce.folio.comic.PdfPageSource
 import java.io.File
-import java.security.MessageDigest
 import kotlin.math.roundToInt
 
 /** Brings files into the library: CBZ / PDF are copied privately; image folders keep a persisted tree grant. */
@@ -41,10 +40,7 @@ class Importer(private val context: Context, private val store: LibraryStore) {
         return Meta(name, size)
     }
 
-    private fun idFor(vararg parts: String): String {
-        val md = MessageDigest.getInstance("SHA-1").digest(parts.joinToString("|").toByteArray())
-        return md.take(8).joinToString("") { "%02x".format(it) }
-    }
+    private fun idFor(vararg parts: String): String = bookIdFor(*parts)
 
     /** Imports one CBZ/PDF document. Returns the (possibly pre-existing) book, or null if unsupported. */
     suspend fun importDocument(uri: Uri): Book? = withContext(io) {
@@ -56,16 +52,30 @@ class Importer(private val context: Context, private val store: LibraryStore) {
         context.contentResolver.openInputStream(uri)?.use { input ->
             tmp.outputStream().use { input.copyTo(it, 256 * 1024) }
         } ?: return@withContext null
+        adopt(tmp, id, m.name)
+    }
+
+    /** Partial download target for [importDownloaded]. */
+    fun downloadTarget(id: String): File = File(booksDir, "$id.download")
+
+    /** Adds a finished download (already in app storage) to the shelf under the same id a manual import would get. */
+    suspend fun importDownloaded(file: File, name: String): Book? = withContext(io) {
+        val id = idFor(name, file.length().toString())
+        store.get(id)?.let { file.delete(); return@withContext it }
+        adopt(file, id, name)
+    }
+
+    private fun adopt(tmp: File, id: String, name: String): Book? {
         val head = ByteArray(4).also { b -> tmp.inputStream().use { it.read(b) } }
         val kind = when {
             head[0] == '%'.code.toByte() && head[1] == 'P'.code.toByte() -> BookKind.PDF
             head[0] == 'P'.code.toByte() && head[1] == 'K'.code.toByte() -> BookKind.CBZ
             else -> null
         }
-        if (kind == null) { tmp.delete(); return@withContext null }
+        if (kind == null) { tmp.delete(); return null }
         val dest = File(booksDir, "$id.${if (kind == BookKind.PDF) "pdf" else "cbz"}")
         tmp.renameTo(dest)
-        runCatching { buildBook(id, kind, dest, m.name) }.getOrElse { dest.delete(); null }
+        return runCatching { buildBook(id, kind, dest, name) }.getOrElse { dest.delete(); null }
             ?.also { store.add(it) }
     }
 
