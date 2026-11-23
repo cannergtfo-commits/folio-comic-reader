@@ -145,7 +145,7 @@ def main():
         json.dump(cat, f, indent=2, ensure_ascii=False); f.write("\n")
     run(["git", "add", "catalog"])
     if run(["git", "diff", "--cached", "--quiet"], check=False).returncode != 0:
-        run(["git", "commit", "-q", "-m", f"Publish {series} chapter {num}: {title}"])
+        run(["git", "commit", "-q", "-m", f"Publish {series} chapter {num}" + (f": {title}" if not re.match(r"(?i)chapter", title) else f" ({title})")])
         if not a.no_push:
             run(["git", "pull", "-q", "--rebase", "origin", "main"])
             run(["git", "push", "-q", "origin", "HEAD:main"])

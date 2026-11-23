@@ -56,6 +56,7 @@ import net.blazarforce.folio.ui.theme.LocalPalette
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
+import androidx.compose.ui.test.performScrollToIndex
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
@@ -197,6 +198,60 @@ class ScreenshotTest {
             }
         }
         snap("09_reader_settings.png")
+    }
+
+    private fun discoverState(): Pair<net.blazarforce.folio.data.LibraryState, Set<String>> {
+        val f = File("/workspace/comic-reader-app/catalog/catalog.json")
+        assumeTrue(f.exists())
+        val cat = net.blazarforce.folio.data.Catalog.parse(f.readText())
+        val covers = cat.chapters.mapNotNull { ch ->
+            val u = ch.cover ?: return@mapNotNull null
+            val local = File("/workspace/comic-reader-app/catalog/covers", u.substringAfterLast('/'))
+            CoverCache.put(local.absolutePath, BitmapFactory.decodeFile(local.absolutePath))
+            u to local.absolutePath
+        }.toMap()
+        val ch = cat.chapters
+        val state = net.blazarforce.folio.data.LibraryState(
+            catalog = cat, fetchedAt = System.currentTimeMillis() - 4 * 60_000,
+            seen = ch.take(3).map { it.id }.toSet(), covers = covers,
+            downloads = mapOf(ch[2].id to 0.62f),
+        )
+        return state to ch.take(2).map { it.bookId }.toSet()
+    }
+
+    private fun discoverShot(theme: AppTheme, name: String, scrollTo: Int = 0) {
+        val (state, shelf) = discoverState()
+        compose.setContent {
+            FolioTheme(theme) {
+                Box(Modifier.fillMaxSize()) {
+                    net.blazarforce.folio.ui.discover.DiscoverScreen(state, shelf, null, {}, {}, {}, {}, {})
+                    net.blazarforce.folio.ui.discover.TabSwitch(
+                        true, 3, {}, {},
+                        Modifier.align(Alignment.BottomCenter).padding(bottom = 30.dp),
+                    )
+                }
+            }
+        }
+        if (scrollTo > 0) compose.onNode(androidx.compose.ui.test.hasScrollAction()).performScrollToIndex(scrollTo)
+        snap(name)
+    }
+
+    @Test fun discoverInk() = discoverShot(AppTheme.INK, "13_discover_ink.png")
+
+    @Test fun discoverInkChapters() = discoverShot(AppTheme.INK, "14_discover_chapters_ink.png", scrollTo = 3)
+
+    @Test fun discoverPaper() = discoverShot(AppTheme.PAPER, "15_discover_paper.png")
+
+    @Test
+    fun discoverOfflineEmpty() {
+        compose.setContent {
+            FolioTheme(AppTheme.INK) {
+                net.blazarforce.folio.ui.discover.DiscoverScreen(
+                    net.blazarforce.folio.data.LibraryState(error = "offline-empty"), emptySet(), null, {}, {}, {}, {}, {},
+                )
+            }
+        }
+        snap("16_discover_offline.png")
     }
 
     @Test

@@ -217,7 +217,7 @@ private fun SeriesHero(
                 Spacer(Modifier.width(18.dp))
                 Column(Modifier.weight(1f)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("SERIES · ${s.chapters.size} CHAPTERS", style = Eyebrow, color = p.accent)
+                        Text("${s.chapters.size} CHAPTERS", style = Eyebrow, color = p.accent, maxLines = 1)
                         if (newCount > 0) { Spacer(Modifier.width(8.dp)); NewPill("$newCount NEW") }
                     }
                     Spacer(Modifier.height(8.dp))
@@ -258,7 +258,7 @@ private fun NewPill(text: String) {
     val p = LocalPalette.current
     Box(
         Modifier.background(p.accent, RoundedCornerShape(50)).padding(horizontal = 7.dp, vertical = 2.dp),
-    ) { Text(text, style = Eyebrow, color = if (p.isInk) Color(0xFF1A1408) else Color.White) }
+    ) { Text(text, style = Eyebrow, color = if (p.isInk) Color(0xFF1A1408) else Color.White, maxLines = 1, softWrap = false) }
 }
 
 @Composable
