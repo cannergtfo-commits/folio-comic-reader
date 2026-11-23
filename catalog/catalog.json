@@ -68,9 +68,20 @@
           "size": 16038250,
           "pages": 13,
           "published": "2026-11-22"
+        },
+        {
+          "id": "lyra-bw-6",
+          "number": 6,
+          "title": "Chapter 6: Thalorin",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/lyra-bw-6.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch6_BW.cbz",
+          "file": "Lyra_Ch6_BW.cbz",
+          "size": 16003104,
+          "pages": 13,
+          "published": "2026-11-22"
         }
       ]
     }
   ],
-  "updated": "2026-11-23T04:41:54Z"
+  "updated": "2026-11-23T04:42:00Z"
 }
