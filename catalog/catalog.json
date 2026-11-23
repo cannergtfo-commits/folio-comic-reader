@@ -46,9 +46,20 @@
           "size": 9414529,
           "pages": 9,
           "published": "2026-11-22"
+        },
+        {
+          "id": "lyra-bw-4",
+          "number": 4,
+          "title": "Chapter 4: Not Yours to Take",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/lyra-bw-4.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Lyra_Ch4_BW.cbz",
+          "file": "Lyra_Ch4_BW.cbz",
+          "size": 16259251,
+          "pages": 13,
+          "published": "2026-11-22"
         }
       ]
     }
   ],
-  "updated": "2026-11-23T04:41:41Z"
+  "updated": "2026-11-23T04:41:48Z"
 }
