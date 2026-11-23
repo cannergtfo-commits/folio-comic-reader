@@ -42,6 +42,7 @@ import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.automirrored.outlined.NoteAdd
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -83,6 +84,18 @@ import net.blazarforce.folio.ui.common.rememberCover
 import net.blazarforce.folio.ui.common.OpenBookMark
 import net.blazarforce.folio.ui.common.ProgressLine
 import net.blazarforce.folio.ui.theme.Eyebrow
+import net.blazarforce.folio.ui.common.DashEyebrow
+import net.blazarforce.folio.ui.common.GhostButton
+import net.blazarforce.folio.ui.common.GoldButton
+import net.blazarforce.folio.ui.common.GoldRule
+import net.blazarforce.folio.ui.common.LocalMotion
+import net.blazarforce.folio.ui.common.foilCard
+import net.blazarforce.folio.ui.common.loopPhase
+import net.blazarforce.folio.ui.common.rememberEntranceTracker
+import net.blazarforce.folio.ui.common.softGlow
+import net.blazarforce.folio.ui.common.springPress
+import net.blazarforce.folio.ui.common.staggeredEntrance
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import net.blazarforce.folio.ui.theme.LocalPalette
 import java.util.Calendar
 
@@ -116,13 +129,14 @@ fun LibraryScreen(
     hour: Int = Calendar.getInstance().get(Calendar.HOUR_OF_DAY),
 ) {
     val p = LocalPalette.current
+    val entrance = rememberEntranceTracker()
     var filter by rememberSaveable { mutableStateOf(ShelfFilter.ALL) }
     val continueBook = remember(books) { books.filter { it.inProgress }.maxByOrNull { it.lastReadAt } }
     val shelf = remember(books, filter) {
         buildShelf(books.filter { it.matches(filter) })
     }
 
-    Box(Modifier.fillMaxSize().background(p.canvas)) {
+    Box(Modifier.fillMaxSize().background(p.canvas).softGlow(p.glow, androidx.compose.ui.geometry.Offset(0.1f, 0.02f), 0.75f)) {
         if (books.isEmpty()) {
             Column(Modifier.fillMaxSize().statusBarsPadding()) {
                 BrandBar(theme, importing, onToggleTheme, onImportFiles, onImportFolder)
@@ -140,8 +154,10 @@ fun LibraryScreen(
             item(span = { GridItemSpan(maxLineSpan) }, key = "brand") {
                 Column(Modifier.statusBarsPadding()) {
                     BrandBar(theme, importing, onToggleTheme, onImportFiles, onImportFolder, inset = false)
-                    Spacer(Modifier.height(18.dp))
-                    Text("${greeting(hour)}.", style = MaterialTheme.typography.displayMedium, color = p.text)
+                    Spacer(Modifier.height(20.dp))
+                    DashEyebrow(java.text.SimpleDateFormat("EEEE · MMMM d", java.util.Locale.getDefault()).format(java.util.Date()).uppercase())
+                    Spacer(Modifier.height(10.dp))
+                    Text("${greeting(hour)}.", style = MaterialTheme.typography.displayLarge, color = p.text)
                     Spacer(Modifier.height(6.dp))
                     val reading = books.count { it.inProgress }
                     Text(
@@ -156,7 +172,7 @@ fun LibraryScreen(
             }
             if (continueBook != null) {
                 item(span = { GridItemSpan(maxLineSpan) }, key = "hero") {
-                    ContinueCard(continueBook) { onOpen(continueBook) }
+                    Box(Modifier.staggeredEntrance(entrance, "hero", 0)) { ContinueCard(continueBook) { onOpen(continueBook) } }
                 }
             }
             item(span = { GridItemSpan(maxLineSpan) }, key = "filters") {
@@ -167,7 +183,7 @@ fun LibraryScreen(
                         FilterTabs(filter) { filter = it }
                     }
                     Spacer(Modifier.height(10.dp))
-                    Box(Modifier.fillMaxWidth().height(0.7.dp).background(p.hairline))
+                    GoldRule()
                 }
             }
             if (shelf.isEmpty()) {
@@ -178,10 +194,12 @@ fun LibraryScreen(
                     )
                 }
             }
-            items(shelf, key = { it.key }) { item ->
-                when (item) {
-                    is ShelfItem.Single -> BookCard(item.book, { onOpen(item.book) }, { onLongPress(item.book) })
-                    is ShelfItem.Series -> SeriesCard(item) { onOpenSeries(item.name) }
+            itemsIndexed(shelf, key = { _, it -> it.key }) { i, item ->
+                Box(Modifier.staggeredEntrance(entrance, item.key, i + 1)) {
+                    when (item) {
+                        is ShelfItem.Single -> BookCard(item.book, { onOpen(item.book) }, { onLongPress(item.book) })
+                        is ShelfItem.Series -> SeriesCard(item) { onOpenSeries(item.name) }
+                    }
                 }
             }
             item(span = { GridItemSpan(maxLineSpan) }, key = "foot") {
@@ -267,9 +285,10 @@ private fun FilterTabs(selected: ShelfFilter, onSelect: (ShelfFilter) -> Unit) {
 @Composable
 private fun ContinueCard(book: Book, onClick: () -> Unit) {
     val p = LocalPalette.current
-    val shape = RoundedCornerShape(20.dp)
+    val shape = RoundedCornerShape(24.dp)
+    val src = remember { MutableInteractionSource() }
     Box(
-        Modifier.fillMaxWidth().clip(shape).background(p.surface).clickable(onClick = onClick),
+        Modifier.fillMaxWidth().springPress(src, 0.975f).foilCard(shape, 22.dp).clickable(src, null, onClick = onClick),
     ) {
         // Blurred cover wash on the right, fading into the card.
         rememberCover(book.coverPath)?.let { bmp ->
@@ -284,10 +303,10 @@ private fun ContinueCard(book: Book, onClick: () -> Unit) {
             ),
         )
         Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
-            Cover(book.coverPath, book.title, Modifier.width(98.dp).aspectRatio(COVER_ASPECT), elevation = 18.dp)
+            Cover(book.coverPath, book.title, Modifier.width(104.dp).aspectRatio(COVER_ASPECT), elevation = 22.dp, heroKey = book.id)
             Spacer(Modifier.width(18.dp))
             Column(Modifier.weight(1f)) {
-                Text("CONTINUE READING", style = Eyebrow, color = p.accent)
+                DashEyebrow("CONTINUE READING")
                 Spacer(Modifier.height(8.dp))
                 Text(
                     book.series ?: book.title, style = MaterialTheme.typography.headlineSmall, color = p.text,
@@ -311,12 +330,7 @@ private fun ContinueCard(book: Book, onClick: () -> Unit) {
                     Text("${(book.progress * 100).toInt()}%", style = MaterialTheme.typography.labelMedium, color = p.accent)
                 }
                 Spacer(Modifier.height(12.dp))
-                Button(
-                    onClick = onClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = p.accent, contentColor = if (p.isInk) Color(0xFF1A1408) else Color.White),
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                    modifier = Modifier.height(38.dp),
-                ) { Text("Resume", style = MaterialTheme.typography.labelLarge) }
+                GoldButton("Resume", onClick, height = 40.dp, icon = Icons.AutoMirrored.Outlined.MenuBook)
             }
         }
     }
@@ -326,13 +340,14 @@ private fun ContinueCard(book: Book, onClick: () -> Unit) {
 @Composable
 fun BookCard(book: Book, onClick: () -> Unit, onLongClick: () -> Unit) {
     val p = LocalPalette.current
+    val src = remember { MutableInteractionSource() }
     Column(
-        Modifier.combinedClickable(
-            interactionSource = remember { MutableInteractionSource() }, indication = null,
+        Modifier.springPress(src).combinedClickable(
+            interactionSource = src, indication = null,
             onClick = onClick, onLongClick = onLongClick,
         ),
     ) {
-        Cover(book.coverPath, book.title, Modifier.fillMaxWidth().aspectRatio(COVER_ASPECT))
+        Cover(book.coverPath, book.title, Modifier.fillMaxWidth().aspectRatio(COVER_ASPECT), elevation = 18.dp, heroKey = book.id)
         Spacer(Modifier.height(12.dp))
         if (book.started) {
             ProgressLine(book.progress)
@@ -345,7 +360,7 @@ fun BookCard(book: Book, onClick: () -> Unit, onLongClick: () -> Unit) {
         Spacer(Modifier.height(3.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (!book.started) {
-                Box(Modifier.size(5.dp).background(p.accent, CircleShape))
+                Box(Modifier.size(6.dp).background(p.goldBrush, CircleShape))
                 Spacer(Modifier.width(6.dp))
             }
             Text(metaLine(book), style = MaterialTheme.typography.bodySmall, color = p.muted, maxLines = 1)
@@ -365,7 +380,8 @@ fun metaLine(book: Book): String = buildString {
 @Composable
 private fun SeriesCard(series: ShelfItem.Series, onClick: () -> Unit) {
     val p = LocalPalette.current
-    Column(Modifier.clickable(remember { MutableInteractionSource() }, null, onClick = onClick)) {
+    val src = remember { MutableInteractionSource() }
+    Column(Modifier.springPress(src).clickable(src, null, onClick = onClick)) {
         Box(Modifier.fillMaxWidth().aspectRatio(COVER_ASPECT)) {
             val stack = series.books.take(3)
             // Back issues peek out behind the front cover, like a fanned stack.
@@ -415,12 +431,14 @@ private fun EmptyShelf(onImportFiles: () -> Unit, onImportFolder: () -> Unit, on
         verticalArrangement = Arrangement.Center,
     ) {
         Box(contentAlignment = Alignment.Center) {
+            val breath by loopPhase(4200, still = 0.5f)
+            val b = (kotlin.math.sin(breath * 2 * Math.PI).toFloat() + 1f) / 2f
             Box(
-                Modifier.size(170.dp).drawWithContent {
-                    drawCircle(Brush.radialGradient(listOf(p.accentSoft, Color.Transparent)))
+                Modifier.size(210.dp).graphicsLayer { scaleX = 0.92f + b * 0.12f; scaleY = scaleX; alpha = 0.7f + b * 0.3f }.drawWithContent {
+                    drawCircle(Brush.radialGradient(listOf(p.accent.copy(alpha = 0.30f), p.accentSoft, Color.Transparent)))
                 },
             )
-            OpenBookMark(Modifier.size(112.dp), p.accent, 1.5.dp)
+            OpenBookMark(Modifier.size(112.dp).graphicsLayer { translationY = -b * 6f }, p.accent, 1.5.dp)
         }
         Spacer(Modifier.height(18.dp))
         Text("A quiet shelf.", style = MaterialTheme.typography.displaySmall, color = p.text, textAlign = TextAlign.Center)
@@ -431,26 +449,9 @@ private fun EmptyShelf(onImportFiles: () -> Unit, onImportFolder: () -> Unit, on
             modifier = Modifier.widthIn(max = 320.dp),
         )
         Spacer(Modifier.height(28.dp))
-        Button(
-            onClick = onImportFiles,
-            colors = ButtonDefaults.buttonColors(containerColor = p.accent, contentColor = if (p.isInk) Color(0xFF1A1408) else Color.White),
-            modifier = Modifier.height(48.dp).widthIn(min = 220.dp),
-        ) {
-            Icon(Icons.AutoMirrored.Outlined.NoteAdd, null, Modifier.size(18.dp))
-            Spacer(Modifier.width(10.dp))
-            Text("Import comics", style = MaterialTheme.typography.labelLarge)
-        }
-        Spacer(Modifier.height(10.dp))
-        OutlinedButton(
-            onClick = onImportFolder,
-            border = androidx.compose.foundation.BorderStroke(0.8.dp, p.hairline),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = p.text),
-            modifier = Modifier.height(48.dp).widthIn(min = 220.dp),
-        ) {
-            Icon(Icons.Outlined.FolderOpen, null, Modifier.size(18.dp), tint = p.muted)
-            Spacer(Modifier.width(10.dp))
-            Text("Choose a folder", style = MaterialTheme.typography.labelLarge)
-        }
+        GoldButton("Import comics", onImportFiles, Modifier.widthIn(min = 230.dp), icon = Icons.AutoMirrored.Outlined.NoteAdd, height = 50.dp)
+        Spacer(Modifier.height(12.dp))
+        GhostButton("Choose a folder", onImportFolder, Modifier.widthIn(min = 230.dp), icon = Icons.Outlined.FolderOpen, height = 50.dp)
         if (onDiscover != null) {
             Spacer(Modifier.height(18.dp))
             Text(

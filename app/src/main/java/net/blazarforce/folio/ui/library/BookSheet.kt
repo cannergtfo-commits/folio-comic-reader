@@ -1,5 +1,8 @@
 package net.blazarforce.folio.ui.library
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import net.blazarforce.folio.ui.common.springPress
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,10 +58,10 @@ fun BookSheet(
     ) {
         Column(Modifier.padding(horizontal = 24.dp).navigationBarsPadding().padding(bottom = 12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Cover(book.coverPath, book.title, Modifier.width(76.dp).aspectRatio(COVER_ASPECT), elevation = 10.dp)
+                Cover(book.coverPath, book.title, Modifier.width(92.dp).aspectRatio(COVER_ASPECT), elevation = 22.dp)
                 Spacer(Modifier.width(18.dp))
                 Column {
-                    Text((book.series ?: "Standalone").uppercase(), style = Eyebrow, color = p.accent)
+                    net.blazarforce.folio.ui.common.DashEyebrow((book.series ?: "Standalone").uppercase())
                     Spacer(Modifier.height(4.dp))
                     Text(book.title, style = MaterialTheme.typography.headlineSmall, color = p.text)
                     Spacer(Modifier.height(6.dp))
@@ -71,8 +74,14 @@ fun BookSheet(
                     )
                 }
             }
-            Spacer(Modifier.height(20.dp))
-            SheetAction(Icons.AutoMirrored.Outlined.MenuBook, if (book.inProgress) "Continue reading" else "Read", onRead)
+            Spacer(Modifier.height(18.dp))
+            if (book.started) { net.blazarforce.folio.ui.common.ProgressLine(book.progress); Spacer(Modifier.height(18.dp)) }
+            net.blazarforce.folio.ui.common.GoldButton(
+                if (book.inProgress) "Continue reading" else "Read", onRead, Modifier.fillMaxWidth(),
+                icon = Icons.AutoMirrored.Outlined.MenuBook, height = 50.dp,
+            )
+            Spacer(Modifier.height(8.dp))
+            net.blazarforce.folio.ui.common.GoldRule()
             if (book.started) SheetAction(Icons.Outlined.RestartAlt, "Read from the beginning", onFromStart)
             SheetAction(Icons.Outlined.DoneAll, if (book.finished) "Mark as unread" else "Mark as finished", onToggleFinished)
             SheetAction(Icons.Outlined.DeleteOutline, "Remove from library", onRemove, destructive = true)
@@ -84,8 +93,9 @@ fun BookSheet(
 private fun SheetAction(icon: ImageVector, label: String, onClick: () -> Unit, destructive: Boolean = false) {
     val p = LocalPalette.current
     val color = if (destructive) Color(0xFFD08770) else p.text
+    val src = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 14.dp),
+        Modifier.fillMaxWidth().springPress(src, 0.97f).clickable(src, null, onClick = onClick).padding(vertical = 15.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, null, tint = if (destructive) color else p.accent, modifier = Modifier.size(20.dp))

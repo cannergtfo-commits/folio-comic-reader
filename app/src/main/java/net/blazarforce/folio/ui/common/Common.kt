@@ -83,12 +83,14 @@ fun Cover(
     modifier: Modifier = Modifier,
     elevation: Dp = 14.dp,
     dim: Float = 0f,
+    heroKey: String? = null,
 ) {
     val p = LocalPalette.current
     val bmp = rememberCover(path)
     val alpha by animateFloatAsState(if (bmp != null) 1f else 0f, tween(420), label = "cover")
     Box(
         modifier
+            .trackCoverBounds(heroKey)
             .shadow(elevation, CoverShape, ambientColor = p.shadow, spotColor = p.shadow)
             .clip(CoverShape)
             .background(p.raised),
@@ -143,7 +145,8 @@ fun ProgressLine(progress: Float, modifier: Modifier = Modifier, height: Dp = 2.
         val r = size.height / 2
         drawLine(p.hairline, Offset(r, r), Offset(size.width - r, r), strokeWidth = size.height, cap = StrokeCap.Round)
         if (animated > 0f) drawLine(
-            p.accent, Offset(r, r), Offset(r + (size.width - 2 * r) * animated, r),
+            Brush.horizontalGradient(listOf(p.goldLo, p.accent, p.goldHi), startX = 0f, endX = (size.width * animated).coerceAtLeast(1f)),
+            Offset(r, r), Offset(r + (size.width - 2 * r) * animated, r),
             strokeWidth = size.height, cap = StrokeCap.Round,
         )
     }
@@ -204,8 +207,10 @@ fun FolioSlider(
         modifier = modifier,
         thumb = {
             Box(
-                Modifier.size(16.dp).shadow(4.dp, androidx.compose.foundation.shape.CircleShape)
-                    .background(p.accent, androidx.compose.foundation.shape.CircleShape),
+                Modifier.size(18.dp)
+                    .shadow(8.dp, androidx.compose.foundation.shape.CircleShape, ambientColor = p.accent, spotColor = p.accent)
+                    .background(p.goldBrush, androidx.compose.foundation.shape.CircleShape)
+                    .border(1.dp, Color.White.copy(alpha = 0.35f), androidx.compose.foundation.shape.CircleShape),
             )
         },
         track = { state ->
@@ -215,8 +220,9 @@ fun FolioSlider(
                 val y = size.height / 2
                 drawLine(p.hairline.copy(alpha = p.hairline.alpha * 1.6f), Offset(0f, y), Offset(size.width, y), size.height, StrokeCap.Round)
                 val end = size.width * frac
-                if (rtl) drawLine(p.accent, Offset(size.width, y), Offset(size.width - end, y), size.height, StrokeCap.Round)
-                else drawLine(p.accent, Offset(0f, y), Offset(end, y), size.height, StrokeCap.Round)
+                val gold = Brush.horizontalGradient(listOf(p.goldLo, p.accent, p.goldHi))
+                if (rtl) drawLine(gold, Offset(size.width, y), Offset(size.width - end, y), size.height * 1.4f, StrokeCap.Round)
+                else drawLine(gold, Offset(0f, y), Offset(end, y), size.height * 1.4f, StrokeCap.Round)
             }
         },
     )

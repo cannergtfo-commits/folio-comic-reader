@@ -11,8 +11,8 @@
 
     <style name="Theme.Folio.Starting" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/ink</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
-        <item name="windowSplashScreenAnimationDuration">600</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_anim</item>
+        <item name="windowSplashScreenAnimationDuration">900</item>
         <item name="postSplashScreenTheme">@style/Theme.Folio</item>
     </style>
 </resources>

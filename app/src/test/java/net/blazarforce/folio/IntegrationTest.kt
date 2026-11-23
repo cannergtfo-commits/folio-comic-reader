@@ -31,6 +31,7 @@ class IntegrationTest {
     private val out = File(System.getenv("FOLIO_SHOTS") ?: "/workspace/comic-reader-app/screenshots")
 
     @org.junit.Before fun setUp() {
+        net.blazarforce.folio.ui.common.FolioMotion.ambientByDefault = false
         net.blazarforce.folio.data.Importer.io = kotlinx.coroutines.Dispatchers.Unconfined
         // Prime Robolectric's native graphics JNI on the test thread.
         android.graphics.Bitmap.createBitmap(4, 4, android.graphics.Bitmap.Config.ARGB_8888)

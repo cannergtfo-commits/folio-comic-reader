@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import com.github.takahirom.roborazzi.captureRoboImage
 import kotlinx.coroutines.CoroutineScope
@@ -115,15 +116,25 @@ class ScreenshotTest {
         return lyra + extra
     }
 
+    /** Looping effects (glints, shimmer) hold a fixed frame so shots are deterministic. */
+    private val still = net.blazarforce.folio.ui.common.FolioMotion(ambient = false)
+
     private fun snap(name: String) {
         compose.waitForIdle()
+        compose.onRoot().captureRoboImage(File(out, name).absolutePath)
+    }
+
+    /** For screens with an endless indicator: advance the clock by hand instead of waiting for idle. */
+    private fun snapFrozen(name: String, ms: Long = 1600) {
+        compose.mainClock.autoAdvance = false
+        compose.mainClock.advanceTimeBy(ms)
         compose.onRoot().captureRoboImage(File(out, name).absolutePath)
     }
 
     private fun libraryShot(theme: AppTheme, name: String) {
         val list = library()
         compose.setContent {
-            FolioTheme(theme) {
+            FolioTheme(theme, motion = still) {
                 LibraryScreen(list, theme, false, {}, {}, {}, {}, {}, {}, hour = 20)
             }
         }
@@ -137,17 +148,17 @@ class ScreenshotTest {
     @Test
     fun seriesInk() {
         val series = buildShelf(library()).filterIsInstance<ShelfItem.Series>().first()
-        compose.setContent { FolioTheme(AppTheme.INK) { SeriesScreen(series, {}, {}, {}) } }
+        compose.setContent { FolioTheme(AppTheme.INK, motion = still) { SeriesScreen(series, {}, {}, {}) } }
         snap("03_series_ink.png")
     }
 
     @Test
     fun emptyInk() {
-        compose.setContent { FolioTheme(AppTheme.INK) { LibraryScreen(emptyList(), AppTheme.INK, false, {}, {}, {}, {}, {}, {}) } }
+        compose.setContent { FolioTheme(AppTheme.INK, motion = still) { LibraryScreen(emptyList(), AppTheme.INK, false, {}, {}, {}, {}, {}, {}) } }
         snap("04_empty_ink.png")
     }
 
-    private fun readerShot(name: String, settings: Settings, page: Int, ui: Boolean, theme: AppTheme = AppTheme.INK) {
+    private fun readerShot(name: String, settings: Settings, page: Int, ui: Boolean, theme: AppTheme = AppTheme.INK, dragFraction: Float = 0f) {
         val book = library()[1]
         val src = CbzPageSource(File(book.location))
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -157,13 +168,25 @@ class ScreenshotTest {
             for (i in 0 until src.pageCount) { loader.load(i); thumbs.load(i) }
         }
         compose.setContent {
-            FolioTheme(theme) {
+            FolioTheme(theme, motion = still) {
                 ReaderScreen(
                     book = book, loader = loader, thumbs = thumbs, settings = settings, nextBook = null,
                     onPageChanged = {}, onBack = {}, onSettings = {}, onSetRtl = {}, onOpenNext = {}, onUiVisible = {},
                     initialPage = page, initialUi = ui, autoHideUi = false,
                 )
             }
+        }
+        if (dragFraction != 0f) {
+            compose.waitForIdle()
+            compose.mainClock.autoAdvance = false
+            compose.onRoot().performTouchInput {
+                down(center)
+                val step = -width * dragFraction / 8f
+                repeat(8) { moveBy(androidx.compose.ui.geometry.Offset(step, 0f)); }
+            }
+            compose.mainClock.advanceTimeBy(64)
+            compose.onRoot().captureRoboImage(File(out, name).absolutePath)
+            return
         }
         snap(name)
     }
@@ -180,7 +203,7 @@ class ScreenshotTest {
     @Test
     fun readerSettings() {
         compose.setContent {
-            FolioTheme(AppTheme.INK) {
+            FolioTheme(AppTheme.INK, motion = still) {
                 val p = LocalPalette.current
                 Box(Modifier.fillMaxSize().background(Color(0xFF0A0908))) {
                     Column(
@@ -222,7 +245,7 @@ class ScreenshotTest {
     private fun discoverShot(theme: AppTheme, name: String, scrollTo: Int = 0) {
         val (state, shelf) = discoverState()
         compose.setContent {
-            FolioTheme(theme) {
+            FolioTheme(theme, motion = still) {
                 Box(Modifier.fillMaxSize()) {
                     net.blazarforce.folio.ui.discover.DiscoverScreen(state, shelf, null, {}, {}, {}, {}, {})
                     net.blazarforce.folio.ui.discover.TabSwitch(
@@ -245,13 +268,49 @@ class ScreenshotTest {
     @Test
     fun discoverOfflineEmpty() {
         compose.setContent {
-            FolioTheme(AppTheme.INK) {
+            FolioTheme(AppTheme.INK, motion = still) {
                 net.blazarforce.folio.ui.discover.DiscoverScreen(
                     net.blazarforce.folio.data.LibraryState(error = "offline-empty"), emptySet(), null, {}, {}, {}, {}, {},
                 )
             }
         }
         snap("16_discover_offline.png")
+    }
+
+    @Test fun readerPageFlip() = readerShot(
+        "17_reader_page_flip.png", Settings(haptics = false, pageTurn = PageTurn.BOOK), 3, ui = false, dragFraction = 0.42f,
+    )
+
+    @Test fun readerDepth() = readerShot(
+        "18_reader_depth_turn.png", Settings(haptics = false, pageTurn = PageTurn.DEPTH), 3, ui = false, dragFraction = 0.42f,
+    )
+
+    @Test
+    fun discoverLoading() {
+        compose.setContent {
+            FolioTheme(AppTheme.INK, motion = still) {
+                net.blazarforce.folio.ui.discover.DiscoverScreen(
+                    net.blazarforce.folio.data.LibraryState(refreshing = true), emptySet(), null, {}, {}, {}, {}, {},
+                )
+            }
+        }
+        snapFrozen("19_discover_loading.png")
+    }
+
+    @Test
+    fun downloadStates() {
+        compose.setContent {
+            FolioTheme(AppTheme.INK, motion = still) {
+                val p = LocalPalette.current
+                Box(Modifier.fillMaxSize().background(p.canvas), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                        Text("Get  →  waiting  →  42%  →  90%  →  done  →  Read", color = p.muted, style = MaterialTheme.typography.labelMedium)
+                        net.blazarforce.folio.ui.discover.DownloadStatesPreview()
+                    }
+                }
+            }
+        }
+        snapFrozen("20_download_states.png", ms = 700)
     }
 
     @Test
