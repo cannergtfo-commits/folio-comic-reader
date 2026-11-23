@@ -1,5 +1,6 @@
 package net.blazarforce.folio.ui.library
 
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -83,7 +84,7 @@ fun SeriesScreen(
     val reduce = LocalMotion.current.reduce
     LazyColumn(Modifier.fillMaxSize().background(p.canvas), state = list, contentPadding = PaddingValues(bottom = 24.dp)) {
         item(key = "header") {
-            Box(Modifier.fillMaxWidth()) {
+            Box(Modifier.fillMaxWidth().clipToBounds()) {
                 // Parallax backdrop: the blurred cover drifts at half speed and dims as you scroll.
                 rememberCover(series.books.first().coverPath)?.let { bmp ->
                     Image(
