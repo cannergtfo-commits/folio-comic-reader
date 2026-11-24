@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Blazar Reader Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-24T22:11:49Z",
+  "updated": "2026-11-24T22:38:19Z",
   "app": {
     "version": "1.5",
     "versionCode": 6,
@@ -271,6 +271,17 @@
           "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch9_v3.cbz",
           "file": "Undirheim_Ch9_v3.cbz",
           "size": 8205284,
+          "pages": 19,
+          "published": "2026-11-24"
+        },
+        {
+          "id": "undirheim-10",
+          "number": 10,
+          "title": "Chapter 10: Surface-Blood",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-10.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch10.cbz",
+          "file": "Undirheim_Ch10.cbz",
+          "size": 8823589,
           "pages": 19,
           "published": "2026-11-24"
         }
