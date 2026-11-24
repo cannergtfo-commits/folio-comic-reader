@@ -20,3 +20,9 @@ captures/
 *.iml
 .DS_Store
 *~
+
+# Intermediate Robolectric frames used to build Play Store screenshots
+play-store-kit/raw-shots/
+
+# Local release outputs and Play upload kit zips
+build-out/

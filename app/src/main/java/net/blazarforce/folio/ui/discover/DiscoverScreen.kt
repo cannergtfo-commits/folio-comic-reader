@@ -246,7 +246,7 @@ private fun DiscoverList(
                     Spacer(Modifier.height(22.dp))
                 }
             }
-            if (update != null) item(key = "update") { UpdateCard(update) { onUpdate(update) }; Spacer(Modifier.height(22.dp)) }
+            if (update != null && net.blazarforce.folio.data.UpdateGate.enabled) item(key = "update") { UpdateCard(update) { onUpdate(update) }; Spacer(Modifier.height(22.dp)) }
             if (cat == null) {
                 item(key = "empty") { EmptyLibrary(state, onRefresh) }
             } else {

@@ -40,6 +40,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.FolderOpen
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material.icons.automirrored.outlined.NoteAdd
 import androidx.compose.material.icons.automirrored.outlined.MenuBook
@@ -119,8 +120,14 @@ fun LibraryScreen(
     onOpenSeries: (String) -> Unit,
     onLongPress: (Book) -> Unit,
     onDiscover: (() -> Unit)? = null,
+    onPrivacyPolicy: () -> Unit = {},
+    versionName: String = net.blazarforce.folio.BuildConfig.VERSION_NAME,
+    initialAboutOpen: Boolean = false,
 ) {
     val p = LocalPalette.current
+    var about by rememberSaveable { mutableStateOf(initialAboutOpen) }
+    val onAbout = { about = true }
+    if (about) AboutPrivacyDialog(versionName, onPrivacyPolicy, onDismiss = { about = false })
     val entrance = rememberEntranceTracker()
     var filter by rememberSaveable { mutableStateOf(ShelfFilter.ALL) }
     val continueBook = remember(books) { books.filter { it.inProgress }.maxByOrNull { it.lastReadAt } }
@@ -131,7 +138,7 @@ fun LibraryScreen(
     Box(Modifier.fillMaxSize().background(p.canvas).softGlow(p.glow, androidx.compose.ui.geometry.Offset(0.1f, 0.02f), 0.75f)) {
         if (books.isEmpty()) {
             Column(Modifier.fillMaxSize().statusBarsPadding()) {
-                BrandBar(theme, importing, onToggleTheme, onImportFiles, onImportFolder)
+                BrandBar(theme, importing, onToggleTheme, onImportFiles, onImportFolder, onAbout)
                 EmptyShelf(onImportFiles, onImportFolder, onDiscover)
             }
             return@Box
@@ -145,7 +152,7 @@ fun LibraryScreen(
         ) {
             item(span = { GridItemSpan(maxLineSpan) }, key = "brand") {
                 Column(Modifier.statusBarsPadding()) {
-                    BrandBar(theme, importing, onToggleTheme, onImportFiles, onImportFolder, inset = false)
+                    BrandBar(theme, importing, onToggleTheme, onImportFiles, onImportFolder, onAbout, inset = false)
                     Spacer(Modifier.height(14.dp))
                     GoldRule()
                     Spacer(Modifier.height(18.dp))
@@ -159,7 +166,7 @@ fun LibraryScreen(
             item(span = { GridItemSpan(maxLineSpan) }, key = "filters") {
                 Column {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Column {
+                        Column(Modifier.weight(1f)) {
                             Text("The Shelf", style = MaterialTheme.typography.headlineSmall, color = p.text)
                             val reading = books.count { it.inProgress }
                             Text(
@@ -170,9 +177,9 @@ fun LibraryScreen(
                                 style = MaterialTheme.typography.bodySmall, color = p.muted,
                             )
                         }
-                        Spacer(Modifier.weight(1f))
-                        FilterTabs(filter) { filter = it }
                     }
+                    Spacer(Modifier.height(12.dp))
+                    FilterTabs(filter) { filter = it }
                     Spacer(Modifier.height(10.dp))
                     GoldRule()
                 }
@@ -210,6 +217,7 @@ private fun BrandBar(
     onToggleTheme: () -> Unit,
     onImportFiles: () -> Unit,
     onImportFolder: () -> Unit,
+    onAbout: () -> Unit,
     inset: Boolean = true,
 ) {
     val p = LocalPalette.current
@@ -220,6 +228,9 @@ private fun BrandBar(
             Spacer(Modifier.width(10.dp))
             Text("BLAZAR READER", style = Eyebrow.copy(letterSpacing = Eyebrow.letterSpacing * 1.15f), color = p.text)
             Spacer(Modifier.weight(1f))
+            IconButton(onClick = onAbout) {
+                Icon(Icons.Outlined.Info, contentDescription = "About & privacy", tint = p.muted)
+            }
             IconButton(onClick = onToggleTheme) {
                 Icon(
                     if (theme == AppTheme.INK) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
@@ -256,7 +267,7 @@ private fun BrandBar(
 @Composable
 private fun FilterTabs(selected: ShelfFilter, onSelect: (ShelfFilter) -> Unit) {
     val p = LocalPalette.current
-    Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         ShelfFilter.entries.forEach { f ->
             val on = f == selected
             val color by animateColorAsState(if (on) p.text else p.faint, label = "tab")
@@ -265,7 +276,7 @@ private fun FilterTabs(selected: ShelfFilter, onSelect: (ShelfFilter) -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.clickable(remember { MutableInteractionSource() }, null) { onSelect(f) },
             ) {
-                Text(f.label, style = MaterialTheme.typography.labelMedium, color = color)
+                Text(f.label, style = MaterialTheme.typography.labelMedium, color = color, maxLines = 1, softWrap = false)
                 Spacer(Modifier.height(4.dp))
                 Box(Modifier.width(bar).height(1.5.dp).background(p.accent, CircleShape))
             }

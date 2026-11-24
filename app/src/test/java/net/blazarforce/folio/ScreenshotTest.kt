@@ -319,6 +319,37 @@ class ScreenshotTest {
         snapFrozen("20_download_states.png", ms = 700)
     }
 
+    /** About & Privacy over the Library, as the real dialog (all windows captured). */
+    @OptIn(com.github.takahirom.roborazzi.ExperimentalRoborazziApi::class)
+    @Test
+    fun aboutPrivacyDialog() {
+        val list = library()
+        compose.setContent {
+            FolioTheme(AppTheme.INK, motion = still) {
+                LibraryScreen(list, AppTheme.INK, false, {}, {}, {}, {}, {}, {}, initialAboutOpen = true)
+            }
+        }
+        compose.waitForIdle()
+        com.github.takahirom.roborazzi.captureScreenRoboImage(File(out, "24_about_privacy_dialog.png").absolutePath)
+    }
+
+    /** Same dialog composed in-window over a dimmed Library (deterministic store screenshot). */
+    @Test
+    fun aboutPrivacyComposite() {
+        val list = library()
+        compose.setContent {
+            FolioTheme(AppTheme.INK, motion = still) {
+                Box(Modifier.fillMaxSize()) {
+                    LibraryScreen(list, AppTheme.INK, false, {}, {}, {}, {}, {}, {})
+                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.62f)), contentAlignment = Alignment.Center) {
+                        net.blazarforce.folio.ui.library.AboutPrivacyContent(BuildConfig.VERSION_NAME, {}, {}, Modifier.padding(horizontal = 22.dp))
+                    }
+                }
+            }
+        }
+        snap("25_about_privacy.png")
+    }
+
     @Test
     fun appIcon() {
         compose.setContent {

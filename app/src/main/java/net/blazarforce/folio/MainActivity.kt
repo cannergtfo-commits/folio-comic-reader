@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
             var discover by rememberSaveable { mutableStateOf(false) }
             val shelfIds = remember(books) { books.map { it.id }.toSet() }
             val newCount = lib.catalog?.chapters.orEmpty().count { it.id !in lib.seen && it.bookId !in shelfIds }
-            val update = lib.catalog?.app?.takeIf { it.versionCode > BuildConfig.VERSION_CODE && it.apk.isNotBlank() }
+            val update = net.blazarforce.folio.data.UpdateGate.bannerFor(lib.catalog?.app)
             var discoverSeries by rememberSaveable { mutableStateOf<String?>(null) }
             var seriesName by rememberSaveable { mutableStateOf<String?>(null) }
             var sheetFor by remember { mutableStateOf<Book?>(null) }
@@ -165,7 +165,11 @@ class MainActivity : ComponentActivity() {
                             onGet = { ch -> scope.launch { getChapters(listOf(ch)) } },
                             onGetAll = { s -> scope.launch { getChapters(s.chapters.filter { it.bookId !in shelfIds }) } },
                             onRead = { ch -> app.catalog.bookFor(ch)?.let { openReader(it) } },
-                            onUpdate = { a -> runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(a.apk))) } },
+                            onUpdate = { a ->
+                                if (net.blazarforce.folio.data.UpdateGate.enabled) {
+                                    runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(a.apk))) }
+                                }
+                            },
                             openSeries = discoverSeries,
                             onOpenSeries = { discoverSeries = it },
                         )
@@ -191,6 +195,7 @@ class MainActivity : ComponentActivity() {
                                 onOpenSeries = { seriesName = it },
                                 onLongPress = { sheetFor = it },
                                 onDiscover = { discover = true },
+                                onPrivacyPolicy = { openPrivacyPolicy() },
                             )
                         } else {
                             SeriesScreen(s, onBack = { seriesName = null }, onOpen = { openReader(it) }, onLongPress = { sheetFor = it })
@@ -239,6 +244,10 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleViewIntent(intent)
+    }
+
+    private fun openPrivacyPolicy() {
+        runCatching { startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL))) }
     }
 
     private fun applyBars(theme: AppTheme) {
@@ -320,6 +329,7 @@ class MainActivity : ComponentActivity() {
     }
 
     companion object {
+        const val PRIVACY_POLICY_URL = "https://blazarforce.net/blazar-reader-privacy.html"
         val MIME_TYPES = arrayOf(
             "application/pdf", "application/vnd.comicbook+zip", "application/x-cbz",
             "application/zip", "application/x-zip-compressed", "application/octet-stream",
