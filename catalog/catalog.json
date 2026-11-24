@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Blazar Reader Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-24T01:35:11Z",
+  "updated": "2026-11-24T03:11:05Z",
   "app": {
     "version": "1.5",
     "versionCode": 6,
@@ -222,11 +222,22 @@
         {
           "id": "undirheim-5",
           "number": 5,
-          "title": "Chapter 5: Timber and Teeth",
-          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-5.jpg",
-          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch5.cbz",
-          "file": "Undirheim_Ch5.cbz",
-          "size": 8873529,
+          "title": "Chapter 5: The Mark-Eater",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-5_v2.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch5_v2.cbz",
+          "file": "Undirheim_Ch5_v2.cbz",
+          "size": 9382736,
+          "pages": 19,
+          "published": "2026-11-23"
+        },
+        {
+          "id": "undirheim-6",
+          "number": 6,
+          "title": "Chapter 6: Timber and Teeth",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-6.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch6.cbz",
+          "file": "Undirheim_Ch6.cbz",
+          "size": 8893191,
           "pages": 19,
           "published": "2026-11-23"
         }
