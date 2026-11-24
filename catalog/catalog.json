@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Blazar Reader Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-24T19:49:30Z",
+  "updated": "2026-11-24T20:17:22Z",
   "app": {
     "version": "1.5",
     "versionCode": 6,
@@ -257,9 +257,20 @@
           "number": 8,
           "title": "Chapter 8: First Words",
           "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-8.jpg",
-          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch8.cbz",
-          "file": "Undirheim_Ch8.cbz",
-          "size": 7726082,
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch8_v2.cbz",
+          "file": "Undirheim_Ch8_v2.cbz",
+          "size": 7763887,
+          "pages": 19,
+          "published": "2026-11-24"
+        },
+        {
+          "id": "undirheim-9",
+          "number": 9,
+          "title": "Chapter 9: Sparks on the Shore",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-9.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch9.cbz",
+          "file": "Undirheim_Ch9.cbz",
+          "size": 8244684,
           "pages": 19,
           "published": "2026-11-24"
         }
