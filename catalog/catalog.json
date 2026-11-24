@@ -2,12 +2,12 @@
   "schema": 1,
   "name": "Blazar Reader Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-23T09:02:38Z",
+  "updated": "2026-11-24T01:14:08Z",
   "app": {
-    "version": "1.3",
-    "versionCode": 4,
-    "apk": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/v1.3/Folio.apk",
-    "notes": "Discover lists each comic as its own card; tap one for its chapters."
+    "version": "1.4",
+    "versionCode": 5,
+    "apk": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/v1.4/BlazarReader-1.4.apk",
+    "notes": "Folio is now Blazar Reader, with a new Play Store package ID. It installs alongside Folio; you can uninstall Folio once you have switched."
   },
   "series": [
     {
