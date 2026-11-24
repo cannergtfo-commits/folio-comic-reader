@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Blazar Reader Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-24T01:14:08Z",
+  "updated": "2026-11-24T01:35:11Z",
   "app": {
     "version": "1.4",
     "versionCode": 5,
@@ -216,6 +216,17 @@
           "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch4.cbz",
           "file": "Undirheim_Ch4.cbz",
           "size": 9201757,
+          "pages": 19,
+          "published": "2026-11-23"
+        },
+        {
+          "id": "undirheim-5",
+          "number": 5,
+          "title": "Chapter 5: Timber and Teeth",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-5.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch5.cbz",
+          "file": "Undirheim_Ch5.cbz",
+          "size": 8873529,
           "pages": 19,
           "published": "2026-11-23"
         }
