@@ -14,14 +14,14 @@ val keystoreProps = Properties().apply {
 
 android {
     namespace = "net.blazarforce.folio"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "net.blazarforce.blazarreader"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 5
-        versionName = "1.4"
+        targetSdk = 36
+        versionCode = 6
+        versionName = "1.5"
     }
 
     signingConfigs {
@@ -32,6 +32,22 @@ android {
                 keyAlias = keystoreProps.getProperty("keyAlias")
                 keyPassword = keystoreProps.getProperty("keyPassword")
             }
+        }
+    }
+
+    // "direct" = BlazarSwap / GitHub sideload build (in-app banner links to the newer APK).
+    // "play"   = Google Play build: updates come only from Play, so the external APK banner is compiled out
+    //            (Device and Network Abuse policy: no self-updating outside Play).
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("direct") {
+            dimension = "distribution"
+            isDefault = true
+            buildConfigField("boolean", "ENABLE_EXTERNAL_UPDATE_BANNER", "true")
+        }
+        create("play") {
+            dimension = "distribution"
+            buildConfigField("boolean", "ENABLE_EXTERNAL_UPDATE_BANNER", "false")
         }
     }
 
@@ -58,6 +74,7 @@ android {
                 // Forward screenshot/testdata paths into the test JVM (workers may not inherit every env var).
                 System.getenv("FOLIO_SHOTS")?.let { shots -> it.environment("FOLIO_SHOTS", shots) }
                 System.getenv("FOLIO_TESTDATA")?.let { data -> it.environment("FOLIO_TESTDATA", data) }
+                System.getenv("FOLIO_PLAY_SHOTS")?.let { shots -> it.environment("FOLIO_PLAY_SHOTS", shots) }
             }
         }
     }
@@ -93,5 +110,5 @@ dependencies {
 // Release unit tests use the release manifest, which correctly omits the test-only
 // ComponentActivity. Compose createComposeRule() then fails. The same suites are
 // run on the debug variant, which is the intended Robolectric setup.
-tasks.matching { it.name == "testReleaseUnitTest" }.configureEach { enabled = false }
+tasks.matching { it.name.startsWith("test") && it.name.endsWith("ReleaseUnitTest") }.configureEach { enabled = false }
 
