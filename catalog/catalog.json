@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Blazar Reader Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-24T05:40:47Z",
+  "updated": "2026-11-24T19:49:30Z",
   "app": {
     "version": "1.5",
     "versionCode": 6,
@@ -251,6 +251,17 @@
           "size": 9017287,
           "pages": 19,
           "published": "2026-11-23"
+        },
+        {
+          "id": "undirheim-8",
+          "number": 8,
+          "title": "Chapter 8: First Words",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-8.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch8.cbz",
+          "file": "Undirheim_Ch8.cbz",
+          "size": 7726082,
+          "pages": 19,
+          "published": "2026-11-24"
         }
       ]
     }
