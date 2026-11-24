@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Blazar Reader Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-24T03:11:05Z",
+  "updated": "2026-11-24T05:40:47Z",
   "app": {
     "version": "1.5",
     "versionCode": 6,
@@ -238,6 +238,17 @@
           "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch6.cbz",
           "file": "Undirheim_Ch6.cbz",
           "size": 8893191,
+          "pages": 19,
+          "published": "2026-11-23"
+        },
+        {
+          "id": "undirheim-7",
+          "number": 7,
+          "title": "Chapter 7: Beyond the Gate",
+          "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-7.jpg",
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch7.cbz",
+          "file": "Undirheim_Ch7.cbz",
+          "size": 9017287,
           "pages": 19,
           "published": "2026-11-23"
         }
