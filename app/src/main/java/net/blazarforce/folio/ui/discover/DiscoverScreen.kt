@@ -235,7 +235,7 @@ private fun DiscoverList(
                     Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
                         OpenBookMark(Modifier.size(24.dp), p.accent, 1.3.dp)
                         Spacer(Modifier.width(10.dp))
-                        Text("FOLIO", style = Eyebrow.copy(letterSpacing = Eyebrow.letterSpacing * 1.6f), color = p.text)
+                        Text("BLAZAR READER", style = Eyebrow.copy(letterSpacing = Eyebrow.letterSpacing * 1.15f), color = p.text)
                     }
                     Spacer(Modifier.height(20.dp))
                     DashEyebrow("THE ONLINE LIBRARY")
@@ -596,7 +596,7 @@ private fun UpdateCard(app: AppRelease, onClick: () -> Unit) {
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
-            Text("Folio ${app.version} is out", style = MaterialTheme.typography.titleMedium, color = p.text)
+            Text("Blazar Reader ${app.version} is out", style = MaterialTheme.typography.titleMedium, color = p.text)
             Text(app.notes ?: "Tap to download the new version.", style = MaterialTheme.typography.bodySmall, color = p.muted, maxLines = 2)
         }
         Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, tint = p.accent, modifier = Modifier.size(18.dp))
@@ -620,7 +620,7 @@ private fun EmptyLibrary(state: LibraryState, onRetry: () -> Unit) {
             Text("The library is out of reach.", style = MaterialTheme.typography.titleLarge, color = p.text, textAlign = TextAlign.Center)
             Spacer(Modifier.height(8.dp))
             Text(
-                "Connect to the internet once and Folio keeps a copy of the catalog for offline browsing. Your shelf works offline either way.",
+                "Connect to the internet once and Blazar Reader keeps a copy of the catalog for offline browsing. Your shelf works offline either way.",
                 style = MaterialTheme.typography.bodyMedium, color = p.muted, textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = 320.dp),
             )
             Spacer(Modifier.height(20.dp))

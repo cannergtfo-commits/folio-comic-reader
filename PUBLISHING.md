@@ -1,17 +1,20 @@
-# Publishing chapters to Folio's library
+# Publishing chapters to Blazar Reader's library
 
-Folio's **Discover** tab reads one file: [`catalog/catalog.json`](catalog/catalog.json), served at
+Blazar Reader's **Discover** tab reads one file: [`catalog/catalog.json`](catalog/catalog.json), served at
 
     https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/catalog.json
 
+That raw URL is hardcoded in existing 1.1–1.3 (and 1.4) installs. Do not rename the GitHub repo without a plan
+for those clients; GitHub HTML redirects do not always apply to `raw.githubusercontent.com`.
+
 Chapter files are assets on the [`library` release](https://github.com/cannergtfo-commits/folio-comic-reader/releases/tag/library).
-Cover thumbnails live in `catalog/covers/`. When the catalog changes, every copy of Folio shows the new chapter
+Cover thumbnails live in `catalog/covers/`. When the catalog changes, every copy of Blazar Reader shows the new chapter
 (marked **NEW**) the next time it opens or the reader pulls down to refresh. No app update is needed.
 
 ## Add a chapter (one command)
 
 ```bash
-cd folio-comic-reader            # this repo
+cd folio-comic-reader            # this repo (folder / GitHub name still folio-comic-reader)
 python3 tools/publish_chapter.py ~/comics/Lyra_Ch7_BW.cbz --series "Lyra" --series-id lyra-bw
 ```
 
@@ -52,7 +55,8 @@ Delete its entry from `catalog/catalog.json` and push. Leave the release asset, 
 ```jsonc
 {
   "schema": 1,
-  "app": { "version": "1.1", "versionCode": 2, "apk": "https://…/Folio.apk", "notes": "…" }, // update banner
+  "name": "Blazar Reader Library",
+  "app": { "version": "1.4", "versionCode": 5, "apk": "https://…/BlazarReader-1.4.apk", "notes": "…" }, // update banner
   "series": [{
     "id": "lyra-bw", "title": "Lyra", "author": "…", "description": "…",
     "cover": "https://…/catalog/covers/lyra-bw-1.jpg", "tags": ["…"],
@@ -65,5 +69,7 @@ Delete its entry from `catalog/catalog.json` and push. Leave the release asset, 
 }
 ```
 
-`size` must be the exact byte size. Folio checks it after downloading and uses `file` + `size` to recognise a
+`size` must be the exact byte size. Blazar Reader checks it after downloading and uses `file` + `size` to recognise a
 chapter the reader already imported by hand. Bump `app.versionCode` when a new APK ships to show the update banner.
+Do not push a bumped `app.versionCode` until that APK is actually attached to the release; otherwise current installs
+will show an update that cannot be downloaded.

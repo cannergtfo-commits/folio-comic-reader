@@ -218,7 +218,7 @@ private fun BrandBar(
         Row(Modifier.fillMaxWidth().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
             OpenBookMark(Modifier.size(24.dp), p.accent, 1.3.dp)
             Spacer(Modifier.width(10.dp))
-            Text("FOLIO", style = Eyebrow.copy(letterSpacing = Eyebrow.letterSpacing * 1.6f), color = p.text)
+            Text("BLAZAR READER", style = Eyebrow.copy(letterSpacing = Eyebrow.letterSpacing * 1.15f), color = p.text)
             Spacer(Modifier.weight(1f))
             IconButton(onClick = onToggleTheme) {
                 Icon(
