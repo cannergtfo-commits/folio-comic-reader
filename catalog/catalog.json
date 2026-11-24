@@ -2,7 +2,7 @@
   "schema": 1,
   "name": "Blazar Reader Library",
   "publisher": "Blazar Force",
-  "updated": "2026-11-24T20:17:22Z",
+  "updated": "2026-11-24T21:49:53Z",
   "app": {
     "version": "1.5",
     "versionCode": 6,
@@ -268,9 +268,9 @@
           "number": 9,
           "title": "Chapter 9: Sparks on the Shore",
           "cover": "https://raw.githubusercontent.com/cannergtfo-commits/folio-comic-reader/main/catalog/covers/undirheim-9.jpg",
-          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch9.cbz",
-          "file": "Undirheim_Ch9.cbz",
-          "size": 8244684,
+          "cbz": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/library/Undirheim_Ch9_v2.cbz",
+          "file": "Undirheim_Ch9_v2.cbz",
+          "size": 8240897,
           "pages": 19,
           "published": "2026-11-24"
         }
