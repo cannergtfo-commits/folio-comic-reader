@@ -4,10 +4,10 @@
   "publisher": "Blazar Force",
   "updated": "2026-11-24T01:35:11Z",
   "app": {
-    "version": "1.4",
-    "versionCode": 5,
-    "apk": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/v1.4/BlazarReader-1.4.apk",
-    "notes": "Folio is now Blazar Reader, with a new Play Store package ID. It installs alongside Folio; you can uninstall Folio once you have switched."
+    "version": "1.5",
+    "versionCode": 6,
+    "apk": "https://github.com/cannergtfo-commits/folio-comic-reader/releases/download/v1.5/BlazarReader-1.5.apk",
+    "notes": "Android 16 support, a new About & Privacy screen, and Dead Letter Riders is now credited to Blazar Force."
   },
   "series": [
     {
