@@ -17,11 +17,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "net.blazarforce.folio"
+        applicationId = "net.blazarforce.blazarreader"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.3"
+        versionCode = 5
+        versionName = "1.4"
     }
 
     signingConfigs {
@@ -52,7 +52,13 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
-            all { it.systemProperty("robolectric.graphicsMode", "NATIVE"); it.maxHeapSize = "2g" }
+            all {
+                it.systemProperty("robolectric.graphicsMode", "NATIVE")
+                it.maxHeapSize = "2g"
+                // Forward screenshot/testdata paths into the test JVM (workers may not inherit every env var).
+                System.getenv("FOLIO_SHOTS")?.let { shots -> it.environment("FOLIO_SHOTS", shots) }
+                System.getenv("FOLIO_TESTDATA")?.let { data -> it.environment("FOLIO_TESTDATA", data) }
+            }
         }
     }
     packaging { resources { excludes += "/META-INF/{AL2.0,LGPL2.1}" } }
@@ -79,5 +85,13 @@ dependencies {
     testImplementation("androidx.compose.ui:ui-test-junit4")
     testImplementation("io.github.takahirom.roborazzi:roborazzi:1.43.0")
     testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.43.0")
+    // Merges ComponentActivity into the debug manifest for Robolectric Compose tests.
+    // Must stay debug-only so it is not packaged in the release AAB.
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
+
+// Release unit tests use the release manifest, which correctly omits the test-only
+// ComponentActivity. Compose createComposeRule() then fails. The same suites are
+// run on the debug variant, which is the intended Robolectric setup.
+tasks.matching { it.name == "testReleaseUnitTest" }.configureEach { enabled = false }
+

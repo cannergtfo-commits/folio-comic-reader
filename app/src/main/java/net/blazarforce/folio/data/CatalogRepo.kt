@@ -157,7 +157,7 @@ class CatalogRepo(
                 val c = (u.openConnection() as HttpURLConnection).apply {
                     connectTimeout = 15_000; readTimeout = 30_000
                     instanceFollowRedirects = false
-                    setRequestProperty("User-Agent", "Folio-Android")
+                    setRequestProperty("User-Agent", "BlazarReader-Android")
                     setRequestProperty("Cache-Control", "no-cache")
                 }
                 val code = c.responseCode

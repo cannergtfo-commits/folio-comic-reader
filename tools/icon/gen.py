@@ -1,4 +1,4 @@
-"""Generates Folio's adaptive icon VectorDrawables + store PNG from one geometry spec."""
+"""Generates Blazar Reader's adaptive icon VectorDrawables + store PNG from one geometry spec."""
 import os
 import cairosvg  # pip install cairosvg
 HERE = os.path.dirname(os.path.abspath(__file__))

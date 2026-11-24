@@ -5,7 +5,7 @@ import org.json.JSONObject
 import java.security.MessageDigest
 
 /**
- * The online library. Folio fetches one small JSON file (see catalog/catalog.json in the repo)
+ * The online library. Blazar Reader fetches one small JSON file (see catalog/catalog.json in the repo)
  * that lists series and their chapters, so new chapters appear without an app update.
  */
 data class Catalog(
@@ -25,7 +25,7 @@ data class Catalog(
             val arr = o.optJSONArray("series") ?: JSONArray()
             return Catalog(
                 schema = o.optInt("schema", 1),
-                name = o.optString("name", "Folio Library"),
+                name = o.optString("name", "Blazar Reader Library"),
                 updated = o.str("updated"),
                 app = o.optJSONObject("app")?.let { a ->
                     AppRelease(a.optString("version"), a.optInt("versionCode"), a.optString("apk"), a.str("notes"))

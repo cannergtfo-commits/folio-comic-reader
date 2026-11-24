@@ -329,7 +329,7 @@ class ScreenshotTest {
                         IconShape(RoundedCornerShape(28), 120)
                     }
                     IconShape(RoundedCornerShape(24), 220)
-                    Text("Folio", color = Color(0xFFEFE8D8), style = MaterialTheme.typography.titleLarge)
+                    Text("Blazar Reader", color = Color(0xFFEFE8D8), style = MaterialTheme.typography.titleLarge)
                 }
             }
         }

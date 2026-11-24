@@ -565,7 +565,7 @@ private fun ReaderOverlay(
                 ) {
                     IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back", tint = p.text) }
                     Column(Modifier.weight(1f).padding(start = 4.dp)) {
-                        net.blazarforce.folio.ui.common.DashEyebrow((book.series ?: "Folio").uppercase())
+                        net.blazarforce.folio.ui.common.DashEyebrow((book.series ?: "Blazar Reader").uppercase())
                         Spacer(Modifier.height(2.dp))
                         Text(
                             if (book.series != null) book.shortLabel else book.title,

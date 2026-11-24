@@ -255,7 +255,7 @@ class MainActivity : ComponentActivity() {
             importing = true
             val book = runCatching { folio.importer.importDocument(uri) }.getOrNull()
             importing = false
-            if (book != null) openReader(book) else say("That file isn't a CBZ or PDF Folio can read.")
+            if (book != null) openReader(book) else say("That file isn't a CBZ or PDF Blazar Reader can read.")
         }
     }
 
@@ -283,7 +283,7 @@ class MainActivity : ComponentActivity() {
         val failed = uris.size - ok
         say(
             when {
-                ok == 0 -> "Nothing imported — Folio reads CBZ and PDF files."
+                ok == 0 -> "Nothing imported — Blazar Reader reads CBZ and PDF files."
                 failed > 0 -> "Added $ok · skipped $failed unsupported"
                 ok == 1 -> "Added to your shelf"
                 else -> "Added $ok books to your shelf"

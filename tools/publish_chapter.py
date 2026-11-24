@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish a comic chapter to Folio's online library.
+"""Publish a comic chapter to Blazar Reader's online library.
 
     python3 tools/publish_chapter.py path/to/Chapter.cbz --series "Lyra"
 
@@ -8,7 +8,7 @@ What it does:
   2. Saves a cover thumbnail to catalog/covers/.
   3. Uploads the CBZ to the GitHub release "library" (created if missing).
   4. Adds or updates the chapter in catalog/catalog.json.
-  5. Commits catalog/ and pushes to main. Every Folio app shows the chapter on its next refresh.
+  5. Commits catalog/ and pushes to main. Every Blazar Reader app shows the chapter on its next refresh.
 
 Needs: git, the GitHub CLI (`gh auth login` once), and Pillow (`pip install pillow`).
 Run it from anywhere inside the repo. Use --dry-run to see what would change.
@@ -73,7 +73,7 @@ def load_catalog():
     if os.path.exists(CATALOG):
         with open(CATALOG, encoding="utf-8") as f:
             return json.load(f)
-    return {"schema": 1, "name": "Folio Library", "publisher": "Blazar Force", "series": []}
+    return {"schema": 1, "name": "Blazar Reader Library", "publisher": "Blazar Force", "series": []}
 
 
 def main():
@@ -138,8 +138,8 @@ def main():
     thumb(cover_bytes, os.path.join(COVERS, cover_name))
 
     if run(["gh", "release", "view", TAG, "--repo", REPO], check=False, capture=True).returncode != 0:
-        run(["gh", "release", "create", TAG, "--repo", REPO, "--title", "Folio library (chapter files)",
-             "--notes", "Chapter files that Folio's Discover tab downloads. Listed in catalog/catalog.json. Don't delete these assets."])
+        run(["gh", "release", "create", TAG, "--repo", REPO, "--title", "Blazar Reader library (chapter files)",
+             "--notes", "Chapter files that Blazar Reader's Discover tab downloads. Listed in catalog/catalog.json. Don't delete these assets."])
     print("Uploading to the release…")
     run(["gh", "release", "upload", TAG, path, "--repo", REPO, "--clobber"])
 
@@ -151,7 +151,7 @@ def main():
         if not a.no_push:
             run(["git", "pull", "-q", "--rebase", "origin", "main"])
             run(["git", "push", "-q", "origin", "HEAD:main"])
-            print("Pushed. Folio picks it up on the next refresh (GitHub's raw cache can take ~5 minutes).")
+            print("Pushed. Blazar Reader picks it up on the next refresh (GitHub's raw cache can take ~5 minutes).")
     else:
         print("Catalog unchanged.")
     print(f"CBZ:   {cbz_url}\nCover: {cover_url}")
